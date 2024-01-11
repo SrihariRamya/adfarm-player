@@ -1,0 +1,11 @@
+{
+  "name": "Adfarm",
+  "short_name": "Adfarm",
+  "background_color": "#ED1B24",
+  "theme_color": "#ED1B24",
+  "description": "Adfarm",
+  "orientation": "landscape",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/newsigntv"
+}

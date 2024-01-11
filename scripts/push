@@ -1,0 +1,61 @@
+#!/bin/bash
+startPush()
+{
+ADF_ECR_REPO = '947452459276.dkr.ecr.us-east-1.amazonaws.com/tfw-player'
+NTV_ECR_REPO = '947452459276.dkr.ecr.us-east-1.amazonaws.com/newsigntv-player'
+DOCKER_BUILD_TAG=$GIT_BRANCH-${BUILD_NUMBER}
+echo $1
+if [ $1 == $ADF_ECR_REPO ];
+then
+rm -rf /var/lib/jenkins/.docker/config.json
+GET_LOGIN=$(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 947452459276.dkr.ecr.us-east-1.amazonaws.com)
+IMAGE_ID=$(docker images -q $ADF_ECR_REPO | awk "NR==1")
+echo $IMAGE_ID
+docker tag $IMAGE_ID $1:latest
+docker inspect $IMAGE_ID
+echo $GET_LOGIN
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 947452459276.dkr.ecr.us-east-1.amazonaws.com
+docker push $1:$DOCKER_BUILD_TAG && docker push $1:latest
+elif [ $1 == $NTV_ECR_REPO ];
+then
+rm -rf /var/lib/jenkins/.docker/config.json
+GET_LOGIN=$(aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 947452459276.dkr.ecr.us-east-1.amazonaws.com)
+IMAGE_ID=$(docker images -q $ADF_ECR_REPO | awk "NR==1")
+echo $IMAGE_ID
+docker tag $IMAGE_ID $1:$DOCKER_BUILD_TAG
+docker tag $IMAGE_ID $1:latest
+docker rmi $IMAGE_ID $ADF_ECR_REPO:$DOCKER_BUILD_TAG
+docker rmi $IMAGE_ID $ADF_ECR_REPO:latest
+echo $IMAGE_ID
+docker inspect $IMAGE_ID
+echo $GET_LOGIN
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 947452459276.dkr.ecr.us-east-1.amazonaws.com
+docker push $1:$DOCKER_BUILD_TAG && docker push $1:latest
+else
+echo "Please provide valid parameter"
+fi
+if [ $? -eq 0 ]; then 
+echo "Docker Push got success"
+docker logout
+else 
+echo "Docker Push was failed"
+docker logout
+exit 1
+fi
+}
+
+if [ "$GIT_BRANCH" == "development" ];
+then
+startPush $1
+elif [ "$GIT_BRANCH" == "staging" ];
+then
+startPush $1
+elif [ "$GIT_BRANCH" == "pre-prod" ];
+then
+startPush $1
+elif [ "$GIT_BRANCH" == "master" ];
+then
+startPush $1
+else
+echo "Skipping a build process because this branch is not permitted for docker build: ${GIT_BRANCH}"
+fi

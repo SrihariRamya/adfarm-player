@@ -1,0 +1,97 @@
+#!/bin/bash
+
+startDeploy()
+{
+# Create a new task definition for this build
+sed -e "s;GIT_COMMIT;${IMAGE_VERSION_N};g" ${JSON_FILE_N}.json > ${JSON_FILE_N}-new-${BUILD_NUMBER}.json
+
+sed -e "s;GROUP_NAME;${GIT_BRANCH};g" ${JSON_FILE_N}-new-${BUILD_NUMBER}.json > ${JSON_FILE_N}-${BUILD_NUMBER}.json
+
+cat ${JSON_FILE_N}-${BUILD_NUMBER}.json
+
+aws ecs register-task-definition --family ${TASK_FAMILY_N} --cli-input-json file://${JSON_FILE_N}-${BUILD_NUMBER}.json --region us-east-1
+
+# Update the service with the new task definition and desired count
+TASK_REVISION_N=`aws ecs describe-task-definition --task-definition ${TASK_FAMILY_N} --region us-east-1 | egrep "revision" | tr "/" " " | awk '{print $2}' | sed 's/"$//'`
+echo $TASK_REVISION_N
+DESIRED_COUNT_N=`aws ecs describe-services --cluster ${CLUSTER} --services ${SERVICE_NAME_N}  --region us-east-1 | egrep "desiredCount" | tr "/" " " | awk '{print $2}' | sed 's/,$//'`
+echo $DESIRED_COUNT_N
+aws ecs update-service --cluster ${CLUSTER} --service ${SERVICE_NAME_N} --desired-count 1 --task-definition ${TASK_FAMILY_N} --force-new-deployment --region us-east-1
+
+# Jenkins Job wait until service is avaliable in cluster
+aws ecs wait services-stable --cluster ${CLUSTER} --services ${SERVICE_NAME_N} --region us-east-1
+rm -rf ${JSON_FILE_N}-${BUILD_NUMBER}.json
+rm -rf ${JSON_FILE_N}-new-${BUILD_NUMBER}.json
+}
+
+startDevDeploy()
+{
+# Create a new task definition for this build
+sed -e "s;GIT_COMMIT;${IMAGE_VERSION_N};g" ${JSON_FILE_N}.json > ${JSON_FILE_N}-new-${BUILD_NUMBER}.json
+
+sed -e "s;GROUP_NAME;${GIT_BRANCH};g" ${JSON_FILE_N}-new-${BUILD_NUMBER}.json > ${JSON_FILE_N}-${BUILD_NUMBER}.json
+
+cat ${JSON_FILE_N}-${BUILD_NUMBER}.json
+
+aws ecs register-task-definition --family ${TASK_FAMILY_N} --cli-input-json file://${JSON_FILE_N}-${BUILD_NUMBER}.json --region us-east-1
+
+# Update the service with the new task definition and desired count
+TASK_REVISION_N=`aws ecs describe-task-definition --task-definition ${TASK_FAMILY_N} --region us-east-1 | egrep "revision" | tr "/" " " | awk '{print $2}' | sed 's/"$//'`
+echo $TASK_REVISION_N
+DESIRED_COUNT_N=`aws ecs describe-services --cluster ${CLUSTER} --services ${SERVICE_NAME_N}  --region us-east-1 | egrep "desiredCount" | tr "/" " " | awk '{print $2}' | sed 's/,$//'`
+echo $DESIRED_COUNT_N
+
+OLD_TASK_ID=$(aws ecs list-tasks --cluster ${CLUSTER} --desired-status RUNNING --family ${TASK_FAMILY_N} --region us-east-1 | egrep "task/" | sed -E "s/.*task\/(.*)\"/\1/")
+echo $OLD_TASK_ID
+aws ecs stop-task --cluster ${CLUSTER} --task ${OLD_TASK_ID} --region us-east-1
+echo "Task_revision_no=$TASK_REVISION_N"
+aws ecs update-service --cluster ${CLUSTER} --service ${SERVICE_NAME_N} --desired-count 1 --task-definition ${TASK_FAMILY_N} --force-new-deployment --region us-east-1
+
+# Jenkins Job wait until service is avaliable in cluster
+aws ecs wait services-stable --cluster ${CLUSTER} --services ${SERVICE_NAME_N} --region us-east-1
+
+if [ $? -eq 0 ]; then 
+echo "Docker build got success"
+else 
+echo "Docker build was failed"
+exit 1
+fi
+rm -rf ${JSON_FILE_N}-${BUILD_NUMBER}.json
+rm -rf ${JSON_FILE_N}-new-${BUILD_NUMBER}.json
+}
+
+if [ "$GIT_BRANCH" == "development" ]
+then
+SERVICE_NAME_N="newsigntv-player"
+IMAGE_VERSION_N="${GIT_BRANCH}-${BUILD_NUMBER}"
+TASK_FAMILY_N="newsigntv-player"
+CLUSTER="test-ecs-anywhere"
+JSON_FILE_N="onprem-newsigntv"
+startDevDeploy
+elif [ "$GIT_BRANCH" == "staging" ]
+then
+SERVICE_NAME_N="staging-newsigntv-player"
+IMAGE_VERSION_N="${GIT_BRANCH}-${BUILD_NUMBER}"
+TASK_FAMILY_N="newsigntv-player"
+CLUSTER="development"
+JSON_FILE_N="newsigntv-player"
+startDeploy
+elif [ "$GIT_BRANCH" == "pre-prod" ]
+then
+SERVICE_NAME_N="preprod-newsigntv-player"
+IMAGE_VERSION_N="${GIT_BRANCH}-${BUILD_NUMBER}"
+TASK_FAMILY_N="newsigntv-player"
+CLUSTER="development"
+JSON_FILE_N="newsigntv-player"
+startDeploy
+elif [ "$GIT_BRANCH" == "master" ]
+then
+SERVICE_NAME_N="prod-newsigntv-player-latest"
+IMAGE_VERSION_N="${GIT_BRANCH}-${BUILD_NUMBER}"
+TASK_FAMILY_N="newsigntv-player"
+CLUSTER="production-newsigntv"
+JSON_FILE_N="newsigntv-player"
+startDeploy
+else
+ echo "Skipping a deployment because this branch is not permitted for docker deployment: ${GIT_BRANCH}"
+fi

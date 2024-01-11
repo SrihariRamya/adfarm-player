@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <!-- <link rel="icon" href="%PUBLIC_URL%/favicon.ico" /> -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="description" content="The complete CRM for digital signage and monetization" />
+  <!-- <link rel="apple-touch-icon" href="logo192.png" /> -->
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <script>
+    const path = window.location.hostname;
+    const head = document.querySelector('head');
+    const favicon = document.createElement('link');
+    const favtitle = document.createElement('title');
+    favicon.rel = 'icon';
+    favicon.type = 'image/x-icon';
+    if (path.split('.')[1] === 'newsigntv') {
+      favicon.href = 'https://dev-adfarm-ads.s3.amazonaws.com/1574745108527-favicon.ico';
+      favtitle.append('NewSignTv')
+    } else if (path.split('.')[1] === 'adfarm') {
+      favicon.href = 'https://dev-adfarm-ads.s3.amazonaws.com/1575530087582-adfarm.png';
+      favtitle.append('Adfarm')
+    } else if (path.split('.')[1] === 'thefuturewall') {
+      favicon.href = 'https://dev-adfarm-ads.s3-accelerate.amazonaws.com/1583243087190-tfw-logo.png';
+      favtitle.append('TheFutureWall')
+    } else {
+      favicon.href = 'https://dev-adfarm-ads.s3.amazonaws.com/1575530087582-adfarm.png';
+      favtitle.append('Adfarm')
+    }
+    head.appendChild(favtitle);
+    head.appendChild(favicon);
+  </script>
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
+</html>

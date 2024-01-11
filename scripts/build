@@ -1,0 +1,29 @@
+#!/bin/bash
+startBuild()
+{
+echo $1
+DOCKER_BUILD_TAG=$GIT_BRANCH-${BUILD_NUMBER}
+docker build -t $1:$DOCKER_BUILD_TAG --pull=true .
+if [ $? -eq 0 ]; then 
+echo "Docker build got success"
+else 
+echo "Docker build was failed"
+exit 1
+fi
+}
+
+if [ "$GIT_BRANCH" == "development" ];
+then
+startBuild $1
+elif [ "$GIT_BRANCH" == "staging" ];
+then
+startBuild $1
+elif [ "$GIT_BRANCH" == "pre-prod" ];
+then
+startBuild $1
+elif [ "$GIT_BRANCH" == "master" ];
+then
+startBuild $1
+else
+echo "Skipping a build process because this branch is not permitted for docker build: ${GIT_BRANCH}"
+fi
