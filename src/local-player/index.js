@@ -51,16 +51,14 @@ class Player extends Component {
     this.myRef = React.createRef();
     const mode = JSON.parse(window.localStorage.getItem("mode"));
     const modePosition = JSON.parse(window.localStorage.getItem("modePosition"));
-    // const isBrowser = Boolean(window.location.search.replace("?browser=", ""));
     const queryParams = _.split(window.location.search, '&');
-    console.log('queryParams', queryParams, '<<>>>')
+    const browser = queryParams.length > 1 && queryParams[1].replace('isBrowser=', '');
     this.state = {
-      isBrowser: false,
+      isBrowser: browser && browser === "true" ? true : false,
       mediaList: [],
       videos: [],
       loaded: false,
-      // player_id: Number(urlData[0].replace('/player_id=', '')),
-      player_id: 345,
+      player_id: Number(queryParams[0].replace('?player_id=', '')),
       mode: Number(mode),
       modePosition: Number(modePosition),
       height: window.innerHeight,
