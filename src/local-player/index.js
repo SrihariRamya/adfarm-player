@@ -1267,7 +1267,6 @@ class Player extends Component {
         </div>
       );
     }
-    commonMediaWidth = commonMediaWidth / 2;
 
     return (
       <>
