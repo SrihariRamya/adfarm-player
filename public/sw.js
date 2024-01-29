@@ -1,16 +1,25 @@
 
-var cache_ver = 2.7;
+var cache_ver = 2.8;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      fetch('sample/asset-manifest.json').then(function (response) {
+      console.log('cache value in install', cache, "<<>>")
+      fetch('asset-manifest.json').then(function (response) {
+        console.log('response in install<<<<<<<', response, '<<>>')
+        if (!response.ok) {
+          console.log('Failed to fetch asset-manifest.json');
+        }
         return response.json();
       }).then(function (files) {
-        return cache.addAll([...files.entrypoints, '../index.html', '/']).then(() => {
+        console.log('files in install<<<<<<<', files, '<<>>')
+        return cache.addAll([...files.entrypoints, '/index.html', '/']).then((data) => {
+          console.log('cache.addAll is called', data, '<<>>>')
           return self.skipWaiting();
-        }).catch(() => { });
+        }).catch((e) => {
+          console.log('Catch block called in cache.addAll', e, '<<>>>')
+        });
       })
     })
   )
@@ -65,6 +74,7 @@ self.addEventListener('activate', function (event) {
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
+          console.log('Delete cacheName activate event', cacheName, '<<>>')
           return caches.delete(cacheName);
         })
       ).then(() => {
