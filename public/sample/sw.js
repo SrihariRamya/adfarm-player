@@ -1,5 +1,5 @@
 
-var cache_ver = 2.0;
+var cache_ver = 2.1;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
@@ -8,7 +8,7 @@ self.addEventListener('install', function (event) {
       fetch('asset-manifest.json').then(function (response) {
         return response.json();
       }).then(function (files) {
-        return cache.addAll([...files.entrypoints, '/index.html', '/']).then(() => {
+        return cache.addAll([...files.entrypoints, '../index.html', '/']).then(() => {
           return self.skipWaiting();
         }).catch(() => { });
       })
