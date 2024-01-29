@@ -1,11 +1,11 @@
 
-var cache_ver = 2.4;
+var cache_ver = 2.5;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      fetch('../asset-manifest.json').then(function (response) {
+      fetch('sample/asset-manifest.json').then(function (response) {
         return response.json();
       }).then(function (files) {
         return cache.addAll([...files.entrypoints, '../index.html', '/sample']).then(() => {
