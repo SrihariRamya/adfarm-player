@@ -35,6 +35,7 @@ export function register() {
           });
 
       } else {
+        console.log('registrations', registrations, '<<>>')
         registrations[0].update();
       }
     });
