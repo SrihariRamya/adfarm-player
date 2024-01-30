@@ -40,8 +40,13 @@ export function register() {
         console.log('registrations[0].active.scriptURL', registrations[0].active.scriptURL, '<<>>')
         console.log('registrations[0].active.scriptURL.include("sample")', registrations[0].active.scriptURL.includes('sample'), '<<>>');
         if (!registrations[0].active.scriptURL.includes('sample')) {
-          const hari = registrations[0].active.scriptURL.split("/");
+          const hari = registrations[0].active.scriptURL.replace('sw.js', '') + `sample/sw.js`;
           console.log('hari value', hari, '<<>>');
+          const ramya = registrations[0].scope + 'sample/';
+          console.log('ramya value', ramya, '<<>>');
+          registrations[0].active.scriptURL = registrations[0].active.scriptURL.replace('sw.js', '') + `sample/sw.js`;
+          registrations[0].scope = registrations[0].scope + 'sample/';
+          return registrations[0].update();
         }
         registrations[0].update();
       }
