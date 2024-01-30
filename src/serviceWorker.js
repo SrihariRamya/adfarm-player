@@ -39,6 +39,10 @@ export function register() {
         console.log('registrations[0].active', registrations[0].active, '<<>>')
         console.log('registrations[0].active.scriptURL', registrations[0].active.scriptURL, '<<>>')
         console.log('registrations[0].active.scriptURL.include("sample")', registrations[0].active.scriptURL.includes('sample'), '<<>>');
+        if (!registrations[0].active.scriptURL.includes('sample')) {
+          const hari = registrations[0].active.scriptURL.split("/");
+          console.log('hari value', hari, '<<>>');
+        }
         registrations[0].update();
       }
     });
