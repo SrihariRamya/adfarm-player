@@ -36,6 +36,9 @@ export function register() {
 
       } else {
         console.log('registrations', registrations, '<<>>')
+        console.log('registrations[0].active', registrations[0].active, '<<>>')
+        console.log('registrations[0].active.scriptURL', registrations[0].active.scriptURL, '<<>>')
+        console.log('registrations[0].active.scriptURL.include("sample")', registrations[0].active.scriptURL.includes('sample'), '<<>>');
         registrations[0].update();
       }
     });
