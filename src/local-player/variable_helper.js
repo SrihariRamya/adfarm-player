@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 export const FULLSCREEN = 4;
 export const BASE = 1;
 export const BASESTRIP = 2;
