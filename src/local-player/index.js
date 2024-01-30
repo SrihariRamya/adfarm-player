@@ -19,7 +19,9 @@ import {
   BASERIGHT,
   STREAM,
   RSS,
-  CACHE_VERSION
+  CACHE_VERSION,
+  PLAYER_ID,
+  IS_BROWSER
 } from "./variable_helper";
 // import { tenantDetail } from "./tenant_helper";
 import blackposter from "./blackscreen.jpeg";
@@ -51,14 +53,15 @@ class Player extends Component {
     this.myRef = React.createRef();
     const mode = JSON.parse(window.localStorage.getItem("mode"));
     const modePosition = JSON.parse(window.localStorage.getItem("modePosition"));
-    const queryParams = _.split(window.location.search, '&');
-    const browser = queryParams.length > 1 && queryParams[1].replace('isBrowser=', '');
+    // const queryParams = _.split(window.location.search, '&');
+    // const browser = queryParams.length > 1 && queryParams[1].replace('isBrowser=', '');
     this.state = {
-      isBrowser: browser && browser === "true" ? true : false,
+      isBrowser: IS_BROWSER,
       mediaList: [],
       videos: [],
       loaded: false,
-      player_id: Number(queryParams[0].replace('?player_id=', '')),
+      // player_id: Number(queryParams[0].replace('?player_id=', '')),
+      player_id: PLAYER_ID,
       mode: Number(mode),
       modePosition: Number(modePosition),
       height: window.innerHeight,
