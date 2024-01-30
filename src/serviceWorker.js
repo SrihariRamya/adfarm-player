@@ -1,4 +1,8 @@
+import { tvLogger } from "./url-helper";
+import { PLAYER_ID, IS_BROWSER } from "./local-player/variable_helper";
+
 export function register(isAppCrashed) {
+  axios.post(`${tvLogger()} `, { player_id: PLAYER_ID, isBrowser: IS_BROWSER, hari:isAppCrashed, message: `SWorker called` });
   console.log('isAppCrashed', isAppCrashed, '<<>>')
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -37,7 +41,15 @@ export function register(isAppCrashed) {
 
       } else {
         console.log('registrations', registrations, '<<>>')
-        registrations[0].update();
+        if (isAppCrashed) {
+          // registrations[0].unregister().then(function(success) {
+          //   window.location.reload(true);
+          // }).catch(function() {
+          //   window.location.reload(true);
+          // });
+        } else {
+          registrations[0].update();
+        }
       }
     });
   }
