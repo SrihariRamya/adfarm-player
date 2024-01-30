@@ -1,8 +1,9 @@
-export function register() {
+export function register(isAppCrashed) {
+  console.log('isAppCrashed', isAppCrashed, '<<>>')
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
-        navigator.serviceWorker.register('sample/sw.js')
+        navigator.serviceWorker.register('sw.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -36,18 +37,6 @@ export function register() {
 
       } else {
         console.log('registrations', registrations, '<<>>')
-        console.log('registrations[0].active', registrations[0].active, '<<>>')
-        console.log('registrations[0].active.scriptURL', registrations[0].active.scriptURL, '<<>>')
-        console.log('registrations[0].active.scriptURL.include("sample")', registrations[0].active.scriptURL.includes('sample'), '<<>>');
-        if (!registrations[0].active.scriptURL.includes('sample')) {
-          const hari = registrations[0].active.scriptURL.replace('sw.js', '') + `sample/sw.js`;
-          console.log('hari value', hari, '<<>>');
-          const ramya = registrations[0].scope + 'sample/';
-          console.log('ramya value', ramya, '<<>>');
-          registrations[0].active.scriptURL = registrations[0].active.scriptURL.replace('sw.js', '') + `sample/sw.js`;
-          registrations[0].scope = registrations[0].scope + 'sample/';
-          return registrations[0].update();
-        }
         registrations[0].update();
       }
     });

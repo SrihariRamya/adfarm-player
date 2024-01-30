@@ -2,9 +2,11 @@ import React, { Component } from "react";
 import axios from "axios";
 import _ from "lodash";
 import { tvLogger } from "./../url-helper";
+import { register } from "./../serviceWorker";
 
 export default class ErrorBoundary extends Component {
   componentDidMount() {
+    register(true);
     window.addEventListener('error', (event) => {
       console.log('Error in error_boundary Mount', event, '<<>>>')
     });
