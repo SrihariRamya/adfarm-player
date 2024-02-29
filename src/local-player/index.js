@@ -1270,6 +1270,7 @@ class Player extends Component {
 
     return (
       <>
+        <h2>White screen issue Reproduce</h2>
         <div style={{ fontSize: 0, backgroundColor: containerColor, height: divHeight, width: commonVideoWidth, transform: commonTransform }}>
           {!isBrowser && (currentBaseStrip.length - 1 >= baseStripPosition) && mode && modePosition && mainBaseStrip}
           {(currentLeftImageList.length && currentVideo.layout_id === 5)
