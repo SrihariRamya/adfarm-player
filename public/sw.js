@@ -1,5 +1,5 @@
 
-var cache_ver = 4.2;
+var cache_ver = 4.3;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
@@ -80,11 +80,11 @@ self.addEventListener('activate', function (event) {
       ).then(() => {
         console.log('about to reload in New code');
         // Reload the page
-        self.clients.matchAll().then(function (clients) {
-          clients.forEach(function (client) {
-            client.navigate(client.url);
-          });
-        });
+        // self.clients.matchAll().then(function (clients) {
+        //   clients.forEach(function (client) {
+        //     client.navigate(client.url);
+        //   });
+        // });
       });
     })
   );
