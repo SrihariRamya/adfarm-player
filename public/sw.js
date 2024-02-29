@@ -1,5 +1,5 @@
 
-var cache_ver = 3.7;
+var cache_ver = 4.1;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
