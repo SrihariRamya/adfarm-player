@@ -1,13 +1,8 @@
-import axios from "axios";
-import { tvLogger } from "./url-helper";
-
 export function register(isAppCrashed) {
-  axios.post(`${tvLogger()} `, { player_id: 321, message: `SWorker called` });
-  console.log('isAppCrashed', isAppCrashed, '<<>>')
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('sworker.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -42,11 +37,11 @@ export function register(isAppCrashed) {
       } else {
         console.log('registrations', registrations, '<<>>')
         if (isAppCrashed) {
-          // registrations[0].unregister().then(function(success) {
-          //   window.location.reload(true);
-          // }).catch(function() {
-          //   window.location.reload(true);
-          // });
+          registrations[0].unregister().then(function(success) {
+            window.location.reload(true);
+          }).catch(function() {
+            window.location.reload(true);
+          });
         } else {
           registrations[0].update();
         }

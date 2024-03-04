@@ -5,20 +5,20 @@ self.addEventListener('install', function (event) {
   console.log('cache_name', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      console.log('cache value in install', cache, "<<>>")
+      console.log('cache value in install sworker', cache, "<<>>")
       fetch('asset-manifest.json').then(function (response) {
-        console.log('response in install<<<<<<<', response, '<<>>')
+        console.log('response in install<<<<<<<sworker', response, '<<>>')
         if (!response.ok) {
           console.log('Failed to fetch asset-manifest.json');
         }
         return response.json();
       }).then(function (files) {
-        console.log('files in install<<<<<<<', files, '<<>>')
+        console.log('files in install<<<<<<<sworker', files, '<<>>')
         return cache.addAll([...files.entrypoints, '/index.html', '/']).then((data) => {
-          console.log('cache.addAll is called', data, '<<>>>')
+          console.log('cache.addAll is called sworker', data, '<<>>>')
           return self.skipWaiting();
         }).catch((e) => {
-          console.log('Catch block called in cache.addAll', e, '<<>>>')
+          console.log('Catch block called in cache.addAll sworker', e, '<<>>>')
         });
       })
     })
@@ -62,23 +62,23 @@ self.addEventListener('fetch', function (event) {
 
 
 self.addEventListener('activate', function (event) {
-  console.log('from activate event', event, '<>>>')
+  console.log('from activate event sworker', event, '<>>>')
   event.waitUntil(
     caches.keys().then(function (cacheNames) {
-      console.log('cacheNames activate event', cacheNames, typeof cacheNames, '<<>>')
+      console.log('cacheNames activate event sworker', cacheNames, typeof cacheNames, '<<>>')
       return Promise.all(
         cacheNames.filter(function (cacheName) {
-          console.log('cacheName activate event', cacheName, 'cache_name', cache_name, '<<>>')
+          console.log('cacheName activate event sworker', cacheName, 'cache_name', cache_name, '<<>>')
           return cache_name != cacheName
           // Return true if you want to remove this cache,
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
-          console.log('Delete cacheName activate event', cacheName, '<<>>')
+          console.log('Delete cacheName activate event sworker', cacheName, '<<>>')
           return caches.delete(cacheName);
         })
       ).then(() => {
-        console.log('about to reload in New code');
+        console.log('about to reload in New code in sworker');
         // Reload the page
         // self.clients.matchAll().then(function (clients) {
         //   clients.forEach(function (client) {
