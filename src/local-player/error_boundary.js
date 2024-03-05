@@ -6,7 +6,7 @@ import { register } from "./../serviceWorker";
 
 export default class ErrorBoundary extends Component {
   componentDidMount() {
-    register(true);
+    // register(true);
     window.addEventListener('error', (event) => {
       console.log('Error in error_boundary Mount', event, '<<>>>')
     });
