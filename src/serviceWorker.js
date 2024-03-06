@@ -2,7 +2,8 @@ export function register(isAppCrashed) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
-        navigator.serviceWorker.register('swv5.js')
+        console.log('Registration called in ServiceWorker')
+        navigator.serviceWorker.register('swv6.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -39,16 +40,23 @@ export function register(isAppCrashed) {
         registrations[0].update();
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        // if (isAppCrashed || (needUnregister !== "swv5")) {
-        //   localStorage.setItem("registeredFile", "swv5");
-        //   registrations[0].unregister().then(function(success) {
-        //     window.location.reload(true);
-        //   }).catch(function() {
-        //     window.location.reload(true);
-        //   });
-        // } else {
-        //   registrations[0].update();
-        // }
+        if (isAppCrashed || (needUnregister !== "swv6")) {
+          localStorage.setItem("registeredFile", "swv6");
+          registrations[0].unregister().then(function(success) {
+            window.location.reload(true);
+            setTimeout(() => {
+              console.log('Reload called ServiceWorker');
+              window.location.reload(true);
+            }, 30 * 1000);
+          }).catch(function() {
+            setTimeout(() => {
+              console.log('Reload called ServiceWorker');
+              window.location.reload(true);
+            }, 30 * 1000);
+          });
+        } else {
+          registrations[0].update();
+        }
       }
     });
   }
