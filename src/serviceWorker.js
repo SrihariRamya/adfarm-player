@@ -2,7 +2,7 @@ export function register(isAppCrashed) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('swv2.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -34,9 +34,12 @@ export function register(isAppCrashed) {
             // console.log('Whoops. Service worker registration failed, error:', err);
           });
 
-      } else {
+      } else if (navigator.onLine) {
         console.log('registrations', registrations, '<<>>')
-        if (isAppCrashed) {
+        const needUnregister = JSON.parse(window.localStorage.getItem("registeredFile"));
+        console.log('needUnregister', needUnregister, '<<>>')
+        if (isAppCrashed || !needUnregister) {
+          localStorage.setItem("registeredFile", "swv2");
           registrations[0].unregister().then(function(success) {
             window.location.reload(true);
           }).catch(function() {
