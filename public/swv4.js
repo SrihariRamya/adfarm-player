@@ -1,5 +1,5 @@
 
-var cache_ver = 6.3;
+var cache_ver = 6.4;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name swv4', cache_name, caches);
@@ -82,6 +82,7 @@ self.addEventListener('activate', function (event) {
         // Reload the page
         setTimeout(() => {
           console.log('Final Reload called swv4');
+          console.log('chrome.windows', chrome.windows, '<<>>')
           self.clients.matchAll().then(function (clients) {
             console.log('clients', clients, '<<>>')
             clients.forEach(function (client) {
