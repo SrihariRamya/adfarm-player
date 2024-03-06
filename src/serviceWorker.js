@@ -3,7 +3,7 @@ export function register(isAppCrashed) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
         console.log('Registration called in ServiceWorker')
-        navigator.serviceWorker.register('swv3.js')
+        navigator.serviceWorker.register('swv4.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -39,8 +39,8 @@ export function register(isAppCrashed) {
         console.log('registrations', registrations, '<<>>')
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        if (isAppCrashed || (needUnregister !== "swv3")) {
-          localStorage.setItem("registeredFile", "swv3");
+        if (isAppCrashed || (needUnregister !== "swv4")) {
+          localStorage.setItem("registeredFile", "swv4");
           registrations[0].unregister().then(function(success) {
             setTimeout(() => {
               console.log('Reload called ServiceWorker');
