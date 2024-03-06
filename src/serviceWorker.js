@@ -37,24 +37,25 @@ export function register(isAppCrashed) {
 
       } else if (navigator.onLine) {
         console.log('registrations', registrations, '<<>>')
+        registrations[0].update();
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        if (isAppCrashed || (needUnregister !== "swv4")) {
-          localStorage.setItem("registeredFile", "swv4");
-          registrations[0].unregister().then(function(success) {
-            setTimeout(() => {
-              console.log('Reload called ServiceWorker');
-              window.location.reload(true);
-            }, 30 * 1000);
-          }).catch(function() {
-            setTimeout(() => {
-              console.log('Reload called ServiceWorker');
-              window.location.reload(true);
-            }, 30 * 1000);
-          });
-        } else {
-          registrations[0].update();
-        }
+        // if (isAppCrashed || (needUnregister !== "swv4")) {
+        //   localStorage.setItem("registeredFile", "swv4");
+        //   registrations[0].unregister().then(function(success) {
+        //     setTimeout(() => {
+        //       console.log('Reload called ServiceWorker');
+        //       window.location.reload(true);
+        //     }, 30 * 1000);
+        //   }).catch(function() {
+        //     setTimeout(() => {
+        //       console.log('Reload called ServiceWorker');
+        //       window.location.reload(true);
+        //     }, 30 * 1000);
+        //   });
+        // } else {
+        //   registrations[0].update();
+        // }
       }
     });
   }
