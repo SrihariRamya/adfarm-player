@@ -1,5 +1,5 @@
 
-var cache_ver = 6.2;
+var cache_ver = 6.3;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name swv4', cache_name, caches);
@@ -87,7 +87,7 @@ self.addEventListener('activate', function (event) {
             clients.forEach(function (client) {
               console.log('client', client, '<<>>')
               console.log('client.url', client.url, '<<>>')
-              client.navigate(client.url);
+              // client.navigate(client.url);
             });
           });
         }, 30 * 1000);
