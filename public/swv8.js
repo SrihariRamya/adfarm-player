@@ -1,24 +1,24 @@
 
-var cache_ver = 5.6;
+var cache_ver = 5.7;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
-  console.log('cache_name swv7', cache_name, caches);
+  console.log('cache_name swv8', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      console.log('cache value in install swv7', cache, "<<>>")
+      console.log('cache value in install swv8', cache, "<<>>")
       fetch('asset-manifest.json').then(function (response) {
-        console.log('response in install<<<<<<< swv7', response, '<<>>')
+        console.log('response in install<<<<<<< swv8', response, '<<>>')
         if (!response.ok) {
-          console.log('Failed to fetch asset-manifest.json swv7');
+          console.log('Failed to fetch asset-manifest.json swv8');
         }
         return response.json();
       }).then(function (files) {
-        console.log('files in install<<<<<<< swv7', files, '<<>>')
+        console.log('files in install<<<<<<< swv8', files, '<<>>')
         return cache.addAll([...files.entrypoints, '/index.html', '/']).then((data) => {
-          console.log('cache.addAll is called swv7', data, '<<>>>')
+          console.log('cache.addAll is called swv8', data, '<<>>>')
           return self.skipWaiting();
         }).catch((e) => {
-          console.log('Catch block called in cache.addAll swv7', e, '<<>>>')
+          console.log('Catch block called in cache.addAll swv8', e, '<<>>>')
         });
       })
     })
@@ -26,7 +26,7 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  console.log('from fetc event swv7', event.request);
+  console.log('from fetc event swv8', event.request);
   if (event.request.method != "POST" && event.request.mode != 'cors' && event.request.destination !== "video" && event.request.destination !== "image") {
     event.respondWith(caches.match(event.request).then(function (response) {
       // caches.match() always resolves
@@ -43,7 +43,7 @@ self.addEventListener('fetch', function (event) {
             return response;
           });
         } else {
-          console.log('from else swv7', event.request)
+          console.log('from else swv8', event.request)
           return fetch(event.request).then(function (response) {
             let responseClone = response.clone();
             caches.open(cache_name).then(function (cache) {
@@ -51,7 +51,7 @@ self.addEventListener('fetch', function (event) {
             });
             return response;
           }).catch(function (e) {
-            console.log('Error during fetch swv7', event.request, e)
+            console.log('Error during fetch swv8', event.request, e)
             //return caches.match('/');
           });
         }
@@ -62,26 +62,26 @@ self.addEventListener('fetch', function (event) {
 
 
 self.addEventListener('activate', function (event) {
-  console.log('from activate event swv7', event, '<>>>')
+  console.log('from activate event swv8', event, '<>>>')
   event.waitUntil(
     caches.keys().then(function (cacheNames) {
-      console.log('cacheNames activate event swv7', cacheNames, typeof cacheNames, '<<>>')
+      console.log('cacheNames activate event swv8', cacheNames, typeof cacheNames, '<<>>')
       return Promise.all(
         cacheNames.filter(function (cacheName) {
-          console.log('cacheName activate event swv7', cacheName, 'cache_name', cache_name, '<<>>')
+          console.log('cacheName activate event swv8', cacheName, 'cache_name', cache_name, '<<>>')
           return cache_name != cacheName
           // Return true if you want to remove this cache,
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
-          console.log('Delete cacheName activate event swv7', cacheName, '<<>>')
+          console.log('Delete cacheName activate event swv8', cacheName, '<<>>')
           return caches.delete(cacheName);
         })
       ).then(() => {
-        console.log('about to reload in New code swv7');
+        console.log('about to reload in New code swv8');
         // Reload the page
         setTimeout(() => {
-          console.log('Final Reload called swv7');
+          console.log('Final Reload called swv8');
           self.clients.matchAll().then(function (clients) {
             clients.forEach(function (client) {
               client.navigate(client.url);
