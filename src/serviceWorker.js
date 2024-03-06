@@ -2,7 +2,7 @@ export function register(isAppCrashed) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
-        navigator.serviceWorker.register('sworker.js')
+        navigator.serviceWorker.register('sw.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
