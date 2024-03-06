@@ -38,7 +38,7 @@ export function register(isAppCrashed) {
         console.log('registrations', registrations, '<<>>')
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        if (isAppCrashed || !needUnregister) {
+        if (isAppCrashed || (!needUnregister || needUnregister === "swv2")) {
           localStorage.setItem("registeredFile", "swv3");
           registrations[0].unregister().then(function(success) {
             window.location.reload(true);
