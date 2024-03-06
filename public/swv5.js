@@ -1,5 +1,5 @@
 
-var cache_ver = 5.3;
+var cache_ver = 5.4;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name swv5', cache_name, caches);
@@ -80,11 +80,14 @@ self.addEventListener('activate', function (event) {
       ).then(() => {
         console.log('about to reload in New code swv5');
         // Reload the page
-        self.clients.matchAll().then(function (clients) {
-          clients.forEach(function (client) {
-            client.navigate(client.url);
+        setTimeout(() => {
+          console.log('Final Reload called swv5');
+          self.clients.matchAll().then(function (clients) {
+            clients.forEach(function (client) {
+              client.navigate(client.url);
+            });
           });
-        });
+        }, 30 * 1000);
       });
     })
   );
