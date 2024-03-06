@@ -6,7 +6,7 @@ import { register } from "./../serviceWorker";
 
 export default class ErrorBoundary extends Component {
   componentDidMount() {
-    // register(true);
+    console.log('navigator.onLine', navigator.onLine, '<<>>')
     window.addEventListener('error', (event) => {
       console.log('Error in error_boundary Mount', event, '<<>>>')
     });
@@ -22,6 +22,7 @@ export default class ErrorBoundary extends Component {
     const isBrowser = Boolean(window.location.search.replace("?browser=", ""));
     const tenant = window.location.href.split("/")[2].split(".")[1];
     axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "ErrorBoundary in PWS", error, errorInfo }).catch((err) => {});
+    register(true);
   }
 
   render() {
