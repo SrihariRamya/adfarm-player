@@ -36,18 +36,19 @@ export function register(isAppCrashed) {
 
       } else if (navigator.onLine) {
         console.log('registrations', registrations, '<<>>')
+        registrations[0].update();
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        if (isAppCrashed || (needUnregister !== "swv5")) {
-          localStorage.setItem("registeredFile", "swv5");
-          registrations[0].unregister().then(function(success) {
-            window.location.reload(true);
-          }).catch(function() {
-            window.location.reload(true);
-          });
-        } else {
-          registrations[0].update();
-        }
+        // if (isAppCrashed || (needUnregister !== "swv5")) {
+        //   localStorage.setItem("registeredFile", "swv5");
+        //   registrations[0].unregister().then(function(success) {
+        //     window.location.reload(true);
+        //   }).catch(function() {
+        //     window.location.reload(true);
+        //   });
+        // } else {
+        //   registrations[0].update();
+        // }
       }
     });
   }
