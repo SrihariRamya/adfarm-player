@@ -1,5 +1,5 @@
 
-var cache_ver = 6.7;
+var cache_ver = 6.8;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name swv4', cache_name, caches);
