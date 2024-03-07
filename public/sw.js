@@ -1,5 +1,5 @@
 
-var cache_ver = 6.7;
+var cache_ver = 6.9;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name swv4', cache_name, caches);
@@ -80,20 +80,14 @@ self.addEventListener('activate', function (event) {
       ).then(() => {
         console.log('about to reload in New code swv4');
         // Reload the page
-        setTimeout(() => {
-          console.log('Final Reload called swv4');
-          // self.clients.matchAll().then(function (clients) {
-          //   console.log('clients', clients, '<<>>')
-          //   clients.forEach(function (client) {
-          //     console.log('client', client, '<<>>')
-          //     console.log('client.url', client.url, '<<>>')
-          //     // client.navigate(client.url);
-          //   });
-          // });
-          console.log('self.clients', self.clients, '<<>>')
-          // Claim all clients immediately
-          self.clients.claim()
-        }, 5 * 1000);
+        self.clients.matchAll().then(function (clients) {
+            console.log('clients', clients, '<<>>')
+            clients.forEach(function (client) {
+              console.log('client', client, '<<>>')
+              console.log('client.url', client.url, '<<>>')
+              client.navigate(client.url);
+            });
+          });
       });
     })
   );
