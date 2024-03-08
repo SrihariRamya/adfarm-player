@@ -3,7 +3,7 @@ export function register(isAppCrashed) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
         console.log('Registration called in ServiceWorker')
-        navigator.serviceWorker.register('sw.js')
+        navigator.serviceWorker.register('swv2.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -24,7 +24,11 @@ export function register(isAppCrashed) {
             if (serviceWorker) {
               serviceWorker.addEventListener('statechange', function (e) {
                 console.log('state change', serviceWorker.state);
-                if (serviceWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (serviceWorker.state === "activated") {
+                  console.log('State === "activated" called')
+                  setTimeout(() => {
+                    window.location.reload(true);
+                  }, 10 * 1000);
                 }
               });
             }
@@ -32,28 +36,29 @@ export function register(isAppCrashed) {
 
           }).catch(function (err) {
             // Failed registration, service worker won’t be installed
-            // console.log('Whoops. Service worker registration failed, error:', err);
+            console.log('Whoops. Service worker registration failed, error:', err);
           });
 
       } else if (navigator.onLine) {
         console.log('registrations', registrations, '<<>>')
-        registrations[0].update();
         const needUnregister = window.localStorage.getItem("registeredFile");
         console.log('needUnregister', needUnregister, '<<>>')
-        // if (isAppCrashed || (needUnregister !== "swv4")) {
-        //   localStorage.setItem("registeredFile", "swv4");
+        registrations[0].update();
+        // if (isAppCrashed || (needUnregister !== "swv2")) {
+        //   localStorage.setItem("registeredFile", "swv2");
         //   registrations[0].unregister().then(function(success) {
         //     setTimeout(() => {
         //       console.log('Reload called ServiceWorker');
         //       window.location.reload(true);
-        //     }, 30 * 1000);
+        //     }, 10 * 1000);
         //   }).catch(function() {
         //     setTimeout(() => {
         //       console.log('Reload called ServiceWorker');
         //       window.location.reload(true);
-        //     }, 30 * 1000);
+        //     }, 10 * 1000);
         //   });
-        // } else {
+        // }
+        // else {
         //   registrations[0].update();
         // }
       }
