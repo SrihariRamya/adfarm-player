@@ -3,6 +3,8 @@ import { NEW_CACHE_VERSION } from "./local-player/variable_helper";
 export function register(isAppCrashed) {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
+      const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
+      console.log('oldCacheVersion', oldCacheVersion, '<<>>')
       if (registrations.length == 0) {
         console.log('Registration called in ServiceWorker')
         navigator.serviceWorker.register('swv4.js')
@@ -39,8 +41,6 @@ export function register(isAppCrashed) {
 
       } else if (navigator.onLine && (isAppCrashed || (NEW_CACHE_VERSION > Number(oldCacheVersion)))) {
         console.log('registrations', registrations, '<<>>')
-        const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
-        console.log('oldCacheVersion', oldCacheVersion, '<<>>')
         localStorage.setItem("oldCacheVersion", NEW_CACHE_VERSION.toString());
         registrations[0].unregister().then(function (success) {
           window.location.reload(true);
