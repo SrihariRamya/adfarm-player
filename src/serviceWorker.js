@@ -8,7 +8,7 @@ export function register(isAppCrashed) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
         console.log('Registration called in ServiceWorker')
-        navigator.serviceWorker.register('swv3.js')
+        navigator.serviceWorker.register('swv4.js')
           .then(function (registration) {
             var serviceWorker;
             if (registration.installing) {
@@ -47,6 +47,7 @@ export function register(isAppCrashed) {
         console.log('registrations', registrations, '<<>>')
         const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
         console.log('oldCacheVersion', oldCacheVersion, '<<>>')
+        console.log('(NEW_CACHE_VERSION > Number(oldCacheVersion))', (NEW_CACHE_VERSION > Number(oldCacheVersion)), '<<>>')
         if (isAppCrashed || (NEW_CACHE_VERSION > Number(oldCacheVersion))) {
           localStorage.setItem("oldCacheVersion", NEW_CACHE_VERSION.toString());
           registrations[0].unregister().then(function(success) {
