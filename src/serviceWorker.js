@@ -1,10 +1,7 @@
 import { NEW_CACHE_VERSION } from "./local-player/variable_helper";
 
 export function register(isAppCrashed) {
-  console.log('ServiceWorker file is called')
-  console.log('NEW_CACHE_VERSION', NEW_CACHE_VERSION, typeof NEW_CACHE_VERSION, '<>>>')
   if ('serviceWorker' in navigator) {
-    console.log('(serviceWorker in navigator) in ServiceWorker')
     navigator.serviceWorker.getRegistrations().then(registrations => {
       if (registrations.length == 0) {
         console.log('Registration called in ServiceWorker')
@@ -31,37 +28,25 @@ export function register(isAppCrashed) {
               serviceWorker.addEventListener('statechange', function (e) {
                 console.log('state change', serviceWorker.state);
                 if (serviceWorker.state === "activated") {
-                  console.log('State === "activated" called')
-                  setTimeout(() => {
-                    window.location.reload(true);
-                  }, 10 * 1000);
+                  window.location.reload(true);
                 }
               });
             }
           }).catch(function (err) {
             // Failed registration, service worker won’t be installed
-            // console.log('Whoops. Service worker registration failed, error:', err);
+            console.log('Whoops. Service worker registration failed, error:', err);
           });
 
-      } else if (navigator.onLine) {
+      } else if (navigator.onLine && (isAppCrashed || (NEW_CACHE_VERSION > Number(oldCacheVersion)))) {
         console.log('registrations', registrations, '<<>>')
         const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
         console.log('oldCacheVersion', oldCacheVersion, '<<>>')
-        console.log('(NEW_CACHE_VERSION > Number(oldCacheVersion))', (NEW_CACHE_VERSION > Number(oldCacheVersion)), '<<>>')
-        if (isAppCrashed || (NEW_CACHE_VERSION > Number(oldCacheVersion))) {
-          localStorage.setItem("oldCacheVersion", NEW_CACHE_VERSION.toString());
-          registrations[0].unregister().then(function(success) {
-            setTimeout(() => {
-              console.log('Reload called ServiceWorker');
-              window.location.reload(true);
-            }, 10 * 1000);
-          }).catch(function() {
-            setTimeout(() => {
-              console.log('Reload called ServiceWorker');
-              window.location.reload(true);
-            }, 10 * 1000);
-          });
-        }
+        localStorage.setItem("oldCacheVersion", NEW_CACHE_VERSION.toString());
+        registrations[0].unregister().then(function (success) {
+          window.location.reload(true);
+        }).catch(function () {
+          window.location.reload(true);
+        });
       }
     });
   }
