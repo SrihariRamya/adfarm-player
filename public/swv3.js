@@ -1,24 +1,24 @@
 
-var cache_ver = 7.1;
+var cache_ver = 7.2;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
-  console.log('cache_name swv2', cache_name, caches);
+  console.log('cache_name swv3', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      console.log('cache value in install swv2', cache, "<<>>")
+      console.log('cache value in install swv3', cache, "<<>>")
       fetch('asset-manifest.json').then(function (response) {
-        console.log('response in install<<<<<<< swv2', response, '<<>>')
+        console.log('response in install<<<<<<< swv3', response, '<<>>')
         if (!response.ok) {
-          console.log('Failed to fetch asset-manifest.json swv2');
+          console.log('Failed to fetch asset-manifest.json swv3');
         }
         return response.json();
       }).then(function (files) {
-        console.log('files in install<<<<<<< swv2', files, '<<>>')
+        console.log('files in install<<<<<<< swv3', files, '<<>>')
         return cache.addAll([...files.entrypoints, '/index.html', '/']).then((data) => {
-          console.log('cache.addAll is called swv2', data, '<<>>>')
+          console.log('cache.addAll is called swv3', data, '<<>>>')
           return self.skipWaiting();
         }).catch((e) => {
-          console.log('Catch block called in cache.addAll swv2', e, '<<>>>')
+          console.log('Catch block called in cache.addAll swv3', e, '<<>>>')
         });
       })
     })
@@ -26,7 +26,7 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  console.log('from fetc event swv2', event.request);
+  console.log('from fetc event swv3', event.request);
   if (event.request.method != "POST" && event.request.mode != 'cors' && event.request.destination !== "video" && event.request.destination !== "image") {
     event.respondWith(caches.match(event.request).then(function (response) {
       // caches.match() always resolves
@@ -43,7 +43,7 @@ self.addEventListener('fetch', function (event) {
             return response;
           });
         } else {
-          console.log('from else swv2', event.request)
+          console.log('from else swv3', event.request)
           return fetch(event.request).then(function (response) {
             let responseClone = response.clone();
             caches.open(cache_name).then(function (cache) {
@@ -51,7 +51,7 @@ self.addEventListener('fetch', function (event) {
             });
             return response;
           }).catch(function (e) {
-            console.log('Error during fetch swv2', event.request, e)
+            console.log('Error during fetch swv3', event.request, e)
             //return caches.match('/');
           });
         }
@@ -62,23 +62,23 @@ self.addEventListener('fetch', function (event) {
 
 
 self.addEventListener('activate', function (event) {
-  console.log('from activate event swv2', event, '<>>>')
+  console.log('from activate event swv3', event, '<>>>')
   event.waitUntil(
     caches.keys().then(function (cacheNames) {
-      console.log('cacheNames activate event swv2', cacheNames, typeof cacheNames, '<<>>')
+      console.log('cacheNames activate event swv3', cacheNames, typeof cacheNames, '<<>>')
       return Promise.all(
         cacheNames.filter(function (cacheName) {
-          console.log('cacheName activate event swv2', cacheName, 'cache_name', cache_name, '<<>>')
+          console.log('cacheName activate event swv3', cacheName, 'cache_name', cache_name, '<<>>')
           return cache_name != cacheName
           // Return true if you want to remove this cache,
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
-          console.log('Delete cacheName activate event swv2', cacheName, '<<>>')
+          console.log('Delete cacheName activate event swv3', cacheName, '<<>>')
           return caches.delete(cacheName);
         })
       ).then(() => {
-        console.log('about to reload in New code swv2');
+        console.log('about to reload in New code swv3');
         // Reload the page
         self.clients.matchAll().then(function (clients) {
             console.log('clients', clients, '<<>>')
