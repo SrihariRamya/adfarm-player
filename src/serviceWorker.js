@@ -5,6 +5,8 @@ import { tvLogger } from "./url-helper";
 
 export function register(isAppCrashed) {
   const queryParams = _.split(window.location.search, '&');
+  console.log('queryParams in SW', queryParams, '<<>>>')
+  console.log("Number(queryParams[0].replace('?player_id=', '')) in SW", Number(queryParams[0].replace('?player_id=', '')), '<<>>>')
   const browser = queryParams.length > 1 && queryParams[1].replace('isBrowser=', '');
   const player_id = Number(queryParams[0].replace('?player_id=', ''));
   const isBrowser = browser && browser === "true" ? true : false;
