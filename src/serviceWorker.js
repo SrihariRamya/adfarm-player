@@ -4,6 +4,8 @@ import { CACHE_VERSION } from "./local-player/variable_helper";
 import { tvLogger } from "./url-helper";
 
 export function register(isAppCrashed) {
+  const urlData = window.location.pathname;
+  const searchParam = window.location.search;
   const queryParams = _.split(window.location.search, '&');
   console.log('queryParams in SW', queryParams, '<<>>>')
   console.log("Number(queryParams[0].replace('?player_id=', '')) in SW", Number(queryParams[0].replace('?player_id=', '')), '<<>>>')
@@ -41,7 +43,7 @@ export function register(isAppCrashed) {
                 console.log('state change', serviceWorker.state);
                 if (serviceWorker.state === "activated") {
                   localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
-                  axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, queryParams, message: "Registration is success PWS" });
+                  axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, urlData, searchParam, queryParams, message: "Registration is success PWS" });
                   window.location.reload(true);
                 }
               });
@@ -52,7 +54,7 @@ export function register(isAppCrashed) {
           });
       } else if (navigator.onLine && (isAppCrashed || (CACHE_VERSION > Number(oldCacheVersion)))) {
         // Here Player update when the new webPlayer launch (or) App crashing time
-        !isAppCrashed && axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Unregistration called PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
+        !isAppCrashed && axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, urlData, searchParam, message: "Unregistration called PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
         registrations[0].unregister().then(function (success) {
           window.location.reload(true);
         }).catch(function () {
