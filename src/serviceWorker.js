@@ -3,7 +3,7 @@ import _ from "lodash";
 import { CACHE_VERSION } from "./local-player/variable_helper";
 import { tvLogger } from "./url-helper";
 
-export async function register(isAppCrashed) {
+export function register(isAppCrashed) {
   const urlData = window.location.pathname;
   const searchParam = window.location.search;
   const queryParams = _.split(window.location.search, '&');
