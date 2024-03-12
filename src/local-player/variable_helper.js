@@ -5,7 +5,18 @@ export const BASELEFT = 3;
 export const BASERIGHT = 5;
 export const STREAM = 2;
 export const RSS = "RSS";
-export const NEW_CACHE_VERSION = 7.3;
+export const CACHE_VERSION = 7.4;
+
+// export const playerDetails = (type) => {
+//     if (type === 'tenant') {
+//         return window.location.href.split("/")[2].split(".")[1];
+//     } else if  (type === "player_id") {
+//         const urlData = _.split(window.location.pathname, '&');
+//         return Number(urlData[0].replace('/player_id=', ''));
+//     } else {
+//         return Boolean(window.location.search.replace("?browser=", ""));
+//     }
+// }
 // export const PLAYER_ID = getPlayerData(true);
 // export const IS_BROWSER = getPlayerData();
 // export const TENANT = window.location.href.split("/")[2].split(".")[1];

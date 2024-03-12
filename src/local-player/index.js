@@ -19,7 +19,7 @@ import {
   BASERIGHT,
   STREAM,
   RSS,
-  NEW_CACHE_VERSION
+  CACHE_VERSION
 } from "./variable_helper";
 // import { tenantDetail } from "./tenant_helper";
 import blackposter from "./blackscreen.jpeg";
@@ -690,7 +690,7 @@ class Player extends Component {
       .then((res) => {
         const { isSocketWorking, serverDate } = res.data;
         const timeObjects = { serverDate, deviceTime: moment().format("YYYY-MM-DD HH:mm:ss") };
-        axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, errorIds, message: `updatePlayCount API success PWS || total mediaList:${res.data.data.length},cversion:${NEW_CACHE_VERSION}`, params, isSocketWorking });
+        axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, errorIds, message: `updatePlayCount API success PWS || total mediaList:${res.data.data.length},cversion:${CACHE_VERSION}`, params, isSocketWorking });
         !isBrowser && !isSocketWorking && this.socketRestart();
         localStorage.setItem("playCountDetail", JSON.stringify([]));
         localStorage.setItem("serverDate", serverDate);
@@ -850,7 +850,7 @@ class Player extends Component {
   getPlayerOrientation = async () => {
     const { player_id, isBrowser } = this.state;
     await axios
-      .get(`${getPlayerOrientation()}?player_id=${player_id}&version=${NEW_CACHE_VERSION}&isBrowser=${isBrowser}`)
+      .get(`${getPlayerOrientation()}?player_id=${player_id}&version=${CACHE_VERSION}&isBrowser=${isBrowser}`)
       .then((res) => {
         const { mode, mode_position } = res.data.data[0];
         localStorage.setItem("mode", mode.toString());
