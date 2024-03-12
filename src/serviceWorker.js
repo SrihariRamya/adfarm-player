@@ -39,7 +39,7 @@ export function register(isAppCrashed) {
                 console.log('state change', serviceWorker.state);
                 if (serviceWorker.state === "activated") {
                   localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
-                  axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Registration is success PWS" });
+                  axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, queryParams, message: "Registration is success PWS" });
                   window.location.reload(true);
                 }
               });
