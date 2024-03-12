@@ -42,9 +42,12 @@ export function register(isAppCrashed) {
               serviceWorker.addEventListener('statechange', function (e) {
                 console.log('state change', serviceWorker.state);
                 if (serviceWorker.state === "activated") {
-                  localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
+                  console.log('urlData in activated', urlData, "searchParam", searchParam, "queryParams", queryParams, "<<>>")
                   axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, urlData, searchParam, queryParams, message: "Registration is success PWS" });
-                  window.location.reload(true);
+                  localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
+                  setTimeout(() => {
+                    window.location.reload(true);
+                  }, 1000 * 10)
                 }
               });
             }
