@@ -52,6 +52,10 @@ class Player extends Component {
     const mode = JSON.parse(window.localStorage.getItem("mode"));
     const modePosition = JSON.parse(window.localStorage.getItem("modePosition"));
     const queryParams = _.split(window.location.search, '&');
+    console.log('window.location.href', window.location.href, '<<>>')
+    console.log("window.location.search", window.location.search, '<<>>')
+    console.log('queryParams', queryParams, '<<>>')
+    console.log("Number(queryParams[0].replace('?player_id=', ''))", Number(queryParams[0].replace('?player_id=', '')), '<<>>')
     const browser = queryParams.length > 1 && queryParams[1].replace('isBrowser=', '');
     this.state = {
       isBrowser: browser && browser === "true" ? true : false,
