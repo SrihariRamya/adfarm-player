@@ -61,9 +61,7 @@ export function register(isAppCrashed) {
           }
           window.location.reload(true);
         }).catch(async function () {
-          if (!isAppCrashed) {
-            await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, urlData, searchParam, message: "Unregistration failed PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
-          }
+          await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, urlData, searchParam, message: "Unregistration failed PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
           window.location.reload(true);
         });
       }
