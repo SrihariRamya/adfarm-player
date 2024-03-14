@@ -12,9 +12,7 @@ export function register(isAppCrashed) {
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
-      const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
       if (registrations.length == 0) {
-        console.log('Registration called in ServiceWorker')
         navigator.serviceWorker.register('sw.js')
           .then(function (registration) {
             var serviceWorker;
@@ -31,35 +29,56 @@ export function register(isAppCrashed) {
               registration.waiting.postMessage('skipWaiting');
 
             } else if (registration.onupdatefound) {
-              console.log('onupdatefound called');
+              console.log('onupdatefound')
               serviceWorker = registration.installing;
             }
             if (serviceWorker) {
-              serviceWorker.addEventListener('statechange', async function (e) {
+              serviceWorker.addEventListener('statechange', function (e) {
                 console.log('state change', serviceWorker.state);
-                if (serviceWorker.state === "activated") {
-                  localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
-                  await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Registration is success PWS" });
-                  window.location.reload(true);
+                if (serviceWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 }
               });
             }
-          }).catch(async function (error) {
+
+
+          }).catch(function (err) {
             // Failed registration, service worker won’t be installed
-            await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Error in Registration PWS", error });
+            // console.log('Whoops. Service worker registration failed, error:', err);
           });
-      } else if (navigator.onLine && (isAppCrashed || (CACHE_VERSION > Number(oldCacheVersion)))) {
-        // Here Player update when the new webPlayer launch (or) App crashing time
-        registrations[0].unregister().then(async function (success) {
-          if (!isAppCrashed) {
-            await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Unregistration success PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
+
+      } else {
+        console.log('registrations', registrations, '<<>>')
+        registrations[0].update().then(updatedRegistration => {
+          console.log('Service worker updated successfully:', updatedRegistration);
+
+          if (updatedRegistration.installing) {
+            console.log('Installing in update')
+            // serviceWorker = registration.installing;
+          } else if (updatedRegistration.waiting) {
+            console.log('Waiting in update')
+            // serviceWorker = registration.waiting;
+            // registration.waiting.postMessage('skipWaiting');
+          } else if (updatedRegistration.active) {
+            console.log('Active in update')
+            // serviceWorker = registration.active;
+            // registration.waiting.postMessage('skipWaiting');
+
+          } else if (updatedRegistration.onupdatefound) {
+            console.log('onupdatefound called in update')
+            // serviceWorker = registration.installing;
           }
-          window.location.reload(true);
-        }).catch(async function () {
-          await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Unregistration failed PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
-          setTimeout(() => {
-            window.location.reload(true);
-          }, 300000)
+  
+          // Add a statechange event listener to the updated service worker
+          updatedRegistration.addEventListener('statechange', function (e) {
+            console.log('Updated service worker state:', updatedRegistration.state);
+            // Handle state changes here
+            if (updatedRegistration.state === 'activated' && navigator.serviceWorker.controller) {
+              console.log('New service worker activated and controlling the page.');
+              // Perform any necessary actions upon activation
+            }
+          });
+        }).catch(error => {
+          console.error('Service worker update failed:', error);
         });
       }
     });

@@ -910,7 +910,8 @@ class Player extends Component {
 
   clearLocalVariable = () => {
     const { player_id, isBrowser } = this.state;
-    axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: `Cleared LocalStorage PWS` })
+    axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: `Cleared LocalStorage PWS` });
+    localStorage.clear();
     window.location.reload(true);
   }
 
@@ -1273,7 +1274,6 @@ class Player extends Component {
 
     return (
       <>
-        <h2>SWorker Test</h2>
         <div style={{ fontSize: 0, backgroundColor: containerColor, height: divHeight, width: commonVideoWidth, transform: commonTransform }}>
           {!isBrowser && (currentBaseStrip.length - 1 >= baseStripPosition) && mode && modePosition && mainBaseStrip}
           {(currentLeftImageList.length && currentVideo.layout_id === 5)
