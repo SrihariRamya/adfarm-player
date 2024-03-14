@@ -29,6 +29,7 @@ export function register(isAppCrashed) {
               registration.waiting.postMessage('skipWaiting');
 
             } else if (registration.onupdatefound) {
+              console.log('onupdatefound')
               serviceWorker = registration.installing;
             }
             if (serviceWorker) {
