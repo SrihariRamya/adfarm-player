@@ -1,5 +1,5 @@
 
-var cache_ver = 0.1;
+var cache_ver = 0.2;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name sw', cache_name, caches);
@@ -75,17 +75,18 @@ self.addEventListener('activate', function (event) {
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
-          console.log('Delete cacheName activate event sw', cacheName, '<<>>')
-          return caches.delete(cacheName);
+          // console.log('Delete cacheName activate event sw', cacheName, '<<>>')
+          console.log('cacheName did not remove for testing purpose sw', cacheName, '<<>>')
+          // return caches.delete(cacheName);
         })
       ).then(() => {
         console.log('about to reload in New code sw');
         // Reload the page
-        self.clients.matchAll().then(function (clients) {
-            clients.forEach(function (client) {
-              client.navigate(client.url);
-            });
-          });
+        // self.clients.matchAll().then(function (clients) {
+        //     clients.forEach(function (client) {
+        //       client.navigate(client.url);
+        //     });
+        //   });
       }).catch((error) => {
         console.log('Error in Catch Remove', error, '<<>>>')
       });
