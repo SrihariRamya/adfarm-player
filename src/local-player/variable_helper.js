@@ -5,7 +5,7 @@ export const BASELEFT = 3;
 export const BASERIGHT = 5;
 export const STREAM = 2;
 export const RSS = "RSS";
-export const CACHE_VERSION = 0.1;
+export const CACHE_VERSION = 0.2;
 
 // export const playerDetails = (type) => {
 //     if (type === 'tenant') {

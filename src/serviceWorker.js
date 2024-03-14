@@ -50,20 +50,29 @@ export function register(isAppCrashed) {
         console.log('registrations', registrations, '<<>>')
         registrations[0].update().then(updatedRegistration => {
           console.log('Service worker updated successfully:', updatedRegistration);
+          let updateSteps = window.localStorage.getItem("UPDATE_STEPS");
 
           if (updatedRegistration.installing) {
+            updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('installing') : [].push('installing');
+            localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             console.log('Installing in update')
             // serviceWorker = registration.installing;
           } else if (updatedRegistration.waiting) {
+            updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('waiting') : [].push('waiting');
+            localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             console.log('Waiting in update')
             // serviceWorker = registration.waiting;
             // registration.waiting.postMessage('skipWaiting');
           } else if (updatedRegistration.active) {
+            updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('active') : [].push('active');
+            localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             console.log('Active in update')
             // serviceWorker = registration.active;
             // registration.waiting.postMessage('skipWaiting');
 
           } else if (updatedRegistration.onupdatefound) {
+            updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('onupdatefound') : [].push('onupdatefound');
+            localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             console.log('onupdatefound called in update')
             // serviceWorker = registration.installing;
           }
@@ -71,6 +80,8 @@ export function register(isAppCrashed) {
           // Add a statechange event listener to the updated service worker
           updatedRegistration.addEventListener('statechange', function (e) {
             console.log('Updated service worker state:', updatedRegistration.state);
+            updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push(`stateChange:${updatedRegistration.state}`) : [].push(`stateChange:${updatedRegistration.state}`);
+            localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             // Handle state changes here
             if (updatedRegistration.state === 'activated' && navigator.serviceWorker.controller) {
               console.log('New service worker activated and controlling the page.');
@@ -78,6 +89,9 @@ export function register(isAppCrashed) {
             }
           });
         }).catch(error => {
+          let updateSteps = window.localStorage.getItem("UPDATE_STEPS");
+          updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push(`errorcalled`) : [].push(`errorcalled`);
+          localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
           console.error('Service worker update failed:', error);
         });
       }
