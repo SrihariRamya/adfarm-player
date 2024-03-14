@@ -1,5 +1,5 @@
 
-var cache_ver = 8.1;
+var cache_ver = 0.1;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
   console.log('cache_name sw', cache_name, caches);
@@ -39,7 +39,8 @@ self.addEventListener('fetch', function (event) {
               cache.put(event.request, responseClone);
             });
             return pagecache;
-          }).catch(function () {
+          }).catch(function (error) {
+            console.log('Error in ER>>>>>>>> sw', error)
             return response;
           });
         } else {
@@ -85,6 +86,8 @@ self.addEventListener('activate', function (event) {
               client.navigate(client.url);
             });
           });
+      }).catch((error) => {
+        console.log('Error in Catch Remove', error, '<<>>>')
       });
     })
   );
