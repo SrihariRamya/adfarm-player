@@ -74,9 +74,9 @@ export function register(isAppCrashed) {
               console.log('updateSteps in if condition', updateSteps, '<<>>')
               localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             } else {
-              updateSteps = [].push('installing');
-              console.log('updateSteps in else', updateSteps, '<<>>')
-              localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
+              updateSteps = [];
+              console.log('updateSteps in else', updateSteps, Array.isArray(updateSteps), '<<>>')
+              localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps.push('installing')));
             }
             console.log('Active in update')
             // serviceWorker = registration.active;
