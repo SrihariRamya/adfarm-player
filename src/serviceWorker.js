@@ -9,6 +9,7 @@ export function register(isAppCrashed) {
   const player_id = Number(queryParams[0].replace('?player_id=', ''));
   const isBrowser = browser && browser === "true" ? true : false;
   const tenant = 'tfw';
+  const allSteps = [];
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -53,21 +54,24 @@ export function register(isAppCrashed) {
           let updateSteps = window.localStorage.getItem("UPDATE_STEPS");
 
           if (updatedRegistration.installing) {
+            allSteps.push('installing');
             // if (updateSteps !== null) {
             //   updateSteps = await JSON.parse(updateSteps).push('installing');
             // } else {
             //   updateSteps = [].push('installing');
             // }
             // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('Installing in update')
+            console.log('Installing in update', allSteps, '<<>>')
             // serviceWorker = registration.installing;
           } else if (updatedRegistration.waiting) {
+            allSteps.push('waiting');
             // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('waiting') : [].push('waiting');
             // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('Waiting in update')
+            console.log('Waiting in update', allSteps, '<<>>')
             // serviceWorker = registration.waiting;
             // registration.waiting.postMessage('skipWaiting');
           } else if (updatedRegistration.active) {
+            allSteps.push('active');
             // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('active') : [].push('active');
             if (updateSteps !== null) {
               updateSteps = await JSON.parse(updateSteps).push('installing');
@@ -78,20 +82,22 @@ export function register(isAppCrashed) {
               console.log('updateSteps in else', updateSteps, Array.isArray(updateSteps), '<<>>')
               localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps.push('installing')));
             }
-            console.log('Active in update')
+            console.log('Active in update', allSteps)
             // serviceWorker = registration.active;
             // registration.waiting.postMessage('skipWaiting');
 
           } else if (updatedRegistration.onupdatefound) {
+            allSteps.push('onupdatefound');
             // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('onupdatefound') : [].push('onupdatefound');
             // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('onupdatefound called in update')
+            console.log('onupdatefound called in update', allSteps)
             // serviceWorker = registration.installing;
           }
   
           // Add a statechange event listener to the updated service worker
           updatedRegistration.addEventListener('statechange', function (e) {
-            console.log('Updated service worker state:', updatedRegistration.state);
+            allSteps.push(`sc-${updatedRegistration.state}`);
+            console.log('Updated service worker state:', updatedRegistration.state, '<<>>', allSteps);
             // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push(`stateChange:${updatedRegistration.state}`) : [].push(`stateChange:${updatedRegistration.state}`);
             // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             // Handle state changes here
