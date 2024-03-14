@@ -71,9 +71,11 @@ export function register(isAppCrashed) {
             // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('active') : [].push('active');
             if (updateSteps !== null) {
               updateSteps = await JSON.parse(updateSteps).push('installing');
+              console.log('updateSteps in if condition', updateSteps, '<<>>')
               localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             } else {
               updateSteps = [].push('installing');
+              console.log('updateSteps in else', updateSteps, '<<>>')
               localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
             }
             console.log('Active in update')
