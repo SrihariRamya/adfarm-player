@@ -5,6 +5,12 @@ import { tvLogger } from "./../url-helper";
 import { register } from "./../serviceWorker";
 
 export default class ErrorBoundary extends Component {
+
+  static getDerivedStateFromError(error) {
+    console.log('error in getDerivedStateFromError', error, '<<>>')
+    // return { hasError: true };
+  }
+
   componentDidMount() {
     console.log('navigator.onLine', navigator.onLine, '<<>>')
     window.addEventListener('error', (event) => {
@@ -26,6 +32,7 @@ export default class ErrorBoundary extends Component {
   }
 
   render() {
+    console.log('ErrorBoundary render() called')
     return this.props.children;
   }
 }
