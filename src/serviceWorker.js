@@ -1,5 +1,5 @@
 import axios from "axios";
-import _, { update } from "lodash";
+import _ from "lodash";
 import { CACHE_VERSION } from "./local-player/variable_helper";
 import { tvLogger } from "./url-helper";
 
@@ -9,11 +9,12 @@ export function register(isAppCrashed) {
   const player_id = Number(queryParams[0].replace('?player_id=', ''));
   const isBrowser = browser && browser === "true" ? true : false;
   const tenant = 'tfw';
-  const allSteps = [];
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
+      const oldCacheVersion = window.localStorage.getItem("oldCacheVersion");
       if (registrations.length == 0) {
+        console.log('Registration called in ServiceWorker')
         navigator.serviceWorker.register('sw.js')
           .then(function (registration) {
             var serviceWorker;
@@ -30,87 +31,36 @@ export function register(isAppCrashed) {
               registration.waiting.postMessage('skipWaiting');
 
             } else if (registration.onupdatefound) {
-              console.log('onupdatefound')
+              console.log('onupdatefound called');
               serviceWorker = registration.installing;
             }
             if (serviceWorker) {
-              serviceWorker.addEventListener('statechange', function (e) {
+              serviceWorker.addEventListener('statechange', async function (e) {
                 console.log('state change', serviceWorker.state);
-                if (serviceWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                if (serviceWorker.state === "activated") {
+                  localStorage.setItem("oldCacheVersion", CACHE_VERSION.toString());
+                  await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Registration is success PWS" });
+                  window.location.reload(true);
                 }
               });
             }
-
-
-          }).catch(function (err) {
+          }).catch(async function (error) {
             // Failed registration, service worker won’t be installed
-            // console.log('Whoops. Service worker registration failed, error:', err);
+            console.log('Failed registration in ServiceWorker', error, '<<>>>')
+            await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Error in Registration PWS", error });
           });
-
-      } else {
-        console.log('registrations', registrations, '<<>>')
-        registrations[0].update().then(async (updatedRegistration) => {
-          console.log('Service worker updated successfully:', updatedRegistration);
-          let updateSteps = window.localStorage.getItem("UPDATE_STEPS");
-
-          if (updatedRegistration.installing) {
-            allSteps.push('installing');
-            // if (updateSteps !== null) {
-            //   updateSteps = await JSON.parse(updateSteps).push('installing');
-            // } else {
-            //   updateSteps = [].push('installing');
-            // }
-            // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('Installing in update', allSteps, '<<>>')
-            // serviceWorker = registration.installing;
-          } else if (updatedRegistration.waiting) {
-            allSteps.push('waiting');
-            // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('waiting') : [].push('waiting');
-            // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('Waiting in update', allSteps, '<<>>')
-            // serviceWorker = registration.waiting;
-            // registration.waiting.postMessage('skipWaiting');
-          } else if (updatedRegistration.active) {
-            allSteps.push('active');
-            // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('active') : [].push('active');
-            if (updateSteps !== null) {
-              updateSteps = await JSON.parse(updateSteps).push('installing');
-              console.log('updateSteps in if condition', updateSteps, '<<>>')
-              localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            } else {
-              updateSteps = [];
-              console.log('updateSteps in else', updateSteps, Array.isArray(updateSteps), '<<>>')
-              localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps.push('installing')));
-            }
-            console.log('Active in update', allSteps)
-            // serviceWorker = registration.active;
-            // registration.waiting.postMessage('skipWaiting');
-
-          } else if (updatedRegistration.onupdatefound) {
-            allSteps.push('onupdatefound');
-            // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push('onupdatefound') : [].push('onupdatefound');
-            // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            console.log('onupdatefound called in update', allSteps)
-            // serviceWorker = registration.installing;
+      } else if (navigator.onLine && (isAppCrashed || (CACHE_VERSION > Number(oldCacheVersion)))) {
+        // Here Player update when the new webPlayer launch (or) App crashing time
+        registrations[0].unregister().then(async function (success) {
+          if (!isAppCrashed) {
+            await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Unregistration success PWS", newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
           }
-  
-          // Add a statechange event listener to the updated service worker
-          updatedRegistration.addEventListener('statechange', function (e) {
-            allSteps.push(`sc-${updatedRegistration.state}`);
-            console.log('Updated service worker state:', updatedRegistration.state, '<<>>', allSteps);
-            // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push(`stateChange:${updatedRegistration.state}`) : [].push(`stateChange:${updatedRegistration.state}`);
-            // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-            // Handle state changes here
-            if (updatedRegistration.state === 'activated' && navigator.serviceWorker.controller) {
-              console.log('New service worker activated and controlling the page.');
-              // Perform any necessary actions upon activation
-            }
-          });
-        }).catch(error => {
-          // let updateSteps = window.localStorage.getItem("UPDATE_STEPS");
-          // updateSteps = updateSteps !== null ? JSON.parse(updateSteps).push(`errorcalled`) : [].push(`errorcalled`);
-          // localStorage.setItem('UPDATE_STEPS', JSON.stringify(updateSteps));
-          console.error('Service worker update failed:', error);
+          window.location.reload(true);
+        }).catch(async function (error) {
+          await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Unregistration failed PWS", error, newVersion: CACHE_VERSION, oldVersion: oldCacheVersion });
+          setTimeout(() => {
+            window.location.reload(true);
+          }, 300000)
         });
       }
     });
