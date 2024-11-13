@@ -22,8 +22,8 @@ export const getAPIUrl = () => {
   //   }
   // } else {
   // return `${protocol}//${hostname}:${port}${apiPath}`;
-  return `https://preprod-player.thefuturewall.com/uberapi/v1`
-  // return `http://192.168.2.135:7005/uberapi/v1`;
+  return `https://dev-player.thefuturewall.com/uberapi/v1`
+  // return `http://192.168.0.109:7005/uberapi/v1`;
   // }
 };
 
@@ -48,7 +48,7 @@ export const getHostUrl = () => {
   //   }
   // } else {
   // return `${protocol}//${hostname}:${port}`;
-  return `https://preprod-player.thefuturewall.com`;
-    // return `http://192.168.2.135:7005`;
+  return `https://dev-player.thefuturewall.com`;
+  // return `http://192.168.0.109:7005`;
   // }
 }

@@ -37,7 +37,7 @@ class VideoComponent extends PureComponent {
           width: commonVideoWidth + "px",
           height: commonVideoHeight + "px",
         }}
-        controls={false}
+        controls={true}
         autoPlay
         onError={onError}
         onEnded={onEnded}

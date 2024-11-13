@@ -1,24 +1,17 @@
 
-var cache_ver = 0.9;
+var cache_ver = 8.4;
 var cache_name = 'adfarm' + cache_ver;
 self.addEventListener('install', function (event) {
-  console.log('cache_name sw', cache_name, caches);
+  console.log('cache_name', cache_name, caches);
   event.waitUntil(
     caches.open(cache_name).then(function (cache) {
-      console.log('cache value in install sw', cache, "<<>>")
       fetch('asset-manifest.json').then(function (response) {
-        console.log('response in install<<<<<<< sw', response, '<<>>')
-        if (!response.ok) {
-          console.log('Failed to fetch asset-manifest.json sw');
-        }
         return response.json();
       }).then(function (files) {
-        console.log('files in install<<<<<<< sw', files, '<<>>')
-        return cache.addAll([...files.entrypoints, '/index.html', '/']).then((data) => {
-          console.log('cache.addAll is called sw', data, '<<>>>')
+        return cache.addAll([...files.entrypoints, '/index.html', '/']).then(() => {
           return self.skipWaiting();
         }).catch((e) => {
-          console.log('Catch block called in cache.addAll sw', e, '<<>>>')
+          console.log("Error in installed catch sw", e, '<<>>')
         });
       })
     })
@@ -26,7 +19,7 @@ self.addEventListener('install', function (event) {
 });
 
 self.addEventListener('fetch', function (event) {
-  console.log('from fetc event sw', event.request);
+  console.log('from fetc event', event.request);
   if (event.request.method != "POST" && event.request.mode != 'cors' && event.request.destination !== "video" && event.request.destination !== "image") {
     event.respondWith(caches.match(event.request).then(function (response) {
       // caches.match() always resolves
@@ -39,12 +32,11 @@ self.addEventListener('fetch', function (event) {
               cache.put(event.request, responseClone);
             });
             return pagecache;
-          }).catch(function (error) {
-            console.log('Error in ER>>>>>>>> sw', error)
+          }).catch(function () {
             return response;
           });
         } else {
-          console.log('from else sw', event.request)
+          console.log('from else', event.request)
           return fetch(event.request).then(function (response) {
             let responseClone = response.clone();
             caches.open(cache_name).then(function (cache) {
@@ -52,7 +44,7 @@ self.addEventListener('fetch', function (event) {
             });
             return response;
           }).catch(function (e) {
-            console.log('Error during fetch sw', event.request, e)
+            console.log('Error during fetch', event.request, e)
             //return caches.match('/');
           });
         }
@@ -75,20 +67,16 @@ self.addEventListener('activate', function (event) {
           // but remember that caches are shared across
           // the whole origin
         }).map(function (cacheName) {
-          // console.log('Delete cacheName activate event sw', cacheName, '<<>>')
-          console.log('cacheName did not remove for testing purpose sw', cacheName, '<<>>')
-          // return caches.delete(cacheName);
+          return caches.delete(cacheName);
         })
       ).then(() => {
         console.log('about to reload in New code sw');
         // Reload the page
-        // self.clients.matchAll().then(function (clients) {
-        //     clients.forEach(function (client) {
-        //       client.navigate(client.url);
-        //     });
-        //   });
-      }).catch((error) => {
-        console.log('Error in Catch Remove', error, '<<>>>')
+        self.clients.matchAll().then(function (clients) {
+          clients.forEach(function (client) {
+            client.navigate(client.url);
+          });
+        });
       });
     })
   );
