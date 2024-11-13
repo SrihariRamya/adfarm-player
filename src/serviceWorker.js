@@ -46,7 +46,6 @@ export function register(isAppCrashed) {
             }
           }).catch(async function (error) {
             // Failed registration, service worker won’t be installed
-            console.log('Failed registration in ServiceWorker', error, '<<>>>')
             await axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: "Error in Registration PWS", error });
           });
       } else if (navigator.onLine && (isAppCrashed || (CACHE_VERSION > Number(oldCacheVersion)))) {

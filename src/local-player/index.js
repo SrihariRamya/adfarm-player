@@ -19,6 +19,7 @@ import {
   BASERIGHT,
   STREAM,
   RSS,
+  HTTP,
   CACHE_VERSION
 } from "./variable_helper";
 // import { tenantDetail } from "./tenant_helper";
@@ -84,12 +85,19 @@ class Player extends Component {
       onceTriggered: false,
       errorIds: [],
       serverDate: window.localStorage.getItem("serverDate"),
-      deviceTime: moment().format("YYYY-MM-DD HH:mm:ss")
+      deviceTime: moment().format("YYYY-MM-DD HH:mm:ss"),
+      loop: false,
+      enablePersonalized: false,
+      validIndex: []
     };
     this.endCalled = false;
     this.triggerTimer = null;
     this.endTimer = null;
     this.timer = null;
+    this.struggleTimer = null;
+    this.observer = null;
+    this.previousWidth = 0;
+    this.previousHeight = 0;
   }
   componentDidMount() {
     localStorage.setItem("rssPosition", JSON.stringify([]));
@@ -98,8 +106,25 @@ class Player extends Component {
     localStorage.setItem("stripPlayerInfoId", "");
     localStorage.setItem("layout_type_id", "");
     localStorage.setItem("setPlaylistCalled", "");
+    localStorage.setItem("lastPlayedMedia", "");
     const { player_id, isBrowser } = this.state;
     this.socketInitialize('mount');
+    // Create the ResizeObserver
+    this.observer = new ResizeObserver((entries) => {
+      setTimeout(() => {
+        for (let entry of entries) {
+          const { width, height } = entry.contentRect;
+          // Only act if size actually changes to avoid unnecessary re-rendering
+          if (width !== this.previousWidth || height !== this.previousHeight) {
+            this.previousWidth = width;
+            this.previousHeight = height;
+            console.log('Resized in observer', width, height);
+          }
+        }
+      }, 0); // Debouncing to avoid the loop limit error
+    });
+    // Observe an element, e.g., document.body
+    this.observer.observe(document.body);
     window.addEventListener("message", message => {
       const nativeMessage = message.data;
       if (nativeMessage.hasOwnProperty("version")) {
@@ -150,7 +175,7 @@ class Player extends Component {
     }
     this.endInterval = setInterval(() => {
       !isBrowser && this.sendPlayCountTimer();
-    }, 900000);
+    }, 300000);
     if (mediaList && player == player_id) {
       this.networkListener()
       const mediaListDetail = this.checkDownloadedMedia(mediaList);
@@ -195,6 +220,10 @@ class Player extends Component {
           if (media.length === 0) return this.setState({ loaded: true });
           this.setPlaylistOrder(false, { mediaList: media });
         }
+        if (_.some(media, (value) => value.media_type === HTTP)) {
+          if (media.length === 0) return this.setState({ loaded: true });
+          this.setPlaylistOrder(false, { mediaList: media });
+        }
       }
 
       if (!online && this.state.online) {
@@ -202,6 +231,15 @@ class Player extends Component {
           let media = JSON.parse(window.localStorage.getItem("mediaList"));
           const list = media.filter(
             (data) => (data.media_type !== RSS)
+          );
+          media = this.checkDownloadedMedia(list);
+          if (media.length === 0) return this.setState({ loaded: true });
+          this.setPlaylistOrder(false, { mediaList: media });
+        }
+        if (_.some(mediaList, (value) => value.media_type === HTTP)) {
+          let media = JSON.parse(window.localStorage.getItem("mediaList"));
+          const list = media.filter(
+            (data) => (data.media_type !== HTTP)
           );
           media = this.checkDownloadedMedia(list);
           if (media.length === 0) return this.setState({ loaded: true });
@@ -237,8 +275,8 @@ class Player extends Component {
     const { serverDate } = this.state;
     const currentTime = currentDate ? currentDate : serverDate;
     const date = currentTime && moment(currentTime).tz('Asia/Kolkata').format("YYYY-MM-DD");
-    const time = moment().format("HH:mm:ss");
-    const day = moment().format("dddd").toLowerCase();
+    const time = currentTime && moment(currentTime).tz('Asia/Kolkata').format("HH:mm:ss");
+    const day = currentTime && moment(currentTime).tz('Asia/Kolkata').format("dddd").toLowerCase();
     const dateHelper = (startDateValid, endDateValid, start_date, end_date) =>
       startDateValid && endDateValid && date >= start_date && date <= end_date;
     const timeHelper = (onTimeValid, onEndValid, on_time, off_time) =>
@@ -271,10 +309,10 @@ class Player extends Component {
       const endDate = moment(media.end_date).tz('Asia/Kolkata');
       const start_date = startDate.format("YYYY-MM-DD");
       const end_date = endDate.format("YYYY-MM-DD");
-      const onTime = moment(media.on_time).tz('Asia/Kolkata');
-      const offTime = moment(media.off_time).tz('Asia/Kolkata');
-      const on_time = onTime.format("HH:mm:ss");
-      const off_time = offTime.format("HH:mm:ss");
+      const onTime = moment(media.on_time);
+      const offTime = moment(media.off_time);
+      const on_time = moment(media.on_time).utc().format("HH:mm:ss");
+      const off_time = moment(media.off_time).utc().format("HH:mm:ss");
       const onTimeValid = onTime.isValid();
       const onEndValid = offTime.isValid();
       const startDateValid = startDate.isValid();
@@ -357,27 +395,14 @@ class Player extends Component {
   setPlaylistOrder = (from, overallData) => {
     const { mediaList, timeObjects } = overallData;
     const commonObject = timeObjects && Object.keys(timeObjects).length ? timeObjects : {};
+    let indices = [];
     let allVideoList = [],
       leftImageList = [],
       stripImageList = [],
       fullScreenList = [];
-    let { loop, videoPosition, playerPosition, position, baseStripPosition, isBrowser, playingTime, player_id } = this.state;
+    let { videoPosition, playerPosition, position, baseStripPosition, isBrowser, playingTime, player_id } = this.state;
     let stripPosition = baseStripPosition;
     let mediaListGroup = _.groupBy(mediaList, "position");
-    if (
-      _.size(mediaListGroup) === 1 &&
-      _.some(mediaListGroup[Object.keys(mediaListGroup)[0]], (value) => value.media_type !== RSS) &&
-      mediaListGroup[Object.keys(mediaListGroup)[0]].filter(
-        (media) =>
-          media.media_type === "video" ||
-          (media.media_type === "HTTP") ||
-          (media.media_type === "image" && media.layout_id === FULLSCREEN)
-      ).length === 1
-    ) {
-      loop = true;
-    } else {
-      loop = false;
-    }
     let baseStrip = [];
     if (layoutOrder) {
       while (_.some(Object.values(mediaListGroup), (value) => value.length)) {
@@ -453,13 +478,25 @@ class Player extends Component {
       positions = this.playerPosition(allVideoList);
       playerPositionValue = positions.playerPosition;
       videoPositionValue = positions.videoPosition;
+      indices = allVideoList.length ? allVideoList[0]
+      .map((item, index) => ({ personalized: item.personalized, index }))
+      .filter(item => item.personalized === 0)
+      .map(item => item.index) : [];
     } else {
+      indices = allVideoList.length ? allVideoList[0]
+      .map((item, index) => ({ personalized: item.personalized, index }))
+      .filter(item => item.personalized === 0)
+      .map(item => item.index) : [];
+      if (allVideoList.length && indices.length && !indices.includes(videoPositionValue)) {
+        videoPositionValue = this.findNextValue(indices, videoPositionValue);
+      }
       const oldPlayerInfoId = window.localStorage.getItem("currentPlayerInfoId");
       const currentPlayerInfoId = allVideoList[playerPositionValue][videoPositionValue].player_info_id;
       isDifferentPlayerInfoId = Number(oldPlayerInfoId) !== currentPlayerInfoId;
       this.endTimer !== null && isDifferentPlayerInfoId && clearTimeout(this.endTimer);
     }
     currentVideo = allVideoList[playerPositionValue][videoPositionValue];
+    positions.videoPosition = videoPositionValue;
     if (currentVideo && Object.keys(currentVideo).length) {
       localStorage.setItem("currentPlayerInfoId", JSON.stringify(currentVideo.player_info_id));
       localStorage.setItem("currentMediaId", JSON.stringify(currentVideo.media_id));
@@ -508,14 +545,15 @@ class Player extends Component {
         allVideoList,
         leftImageList,
         stripImageList,
-        loop,
         loaded: true,
         ...positions,
         mediaList,
         baseStripPosition: stripPosition,
+        validIndex: indices,
         ...commonObject
       },
       () => {
+        isDifferentPlayerInfoId && !isBrowser && this.struggleChecker(currentVideo, 40000);
         if (!setPlaylistCalled) {
           const triggerData = { player_id, reason: 'urlStarted', isBrowser };
           // This trigger is call when Adfarm Url started time, Adfarm Url to Player.
@@ -538,11 +576,24 @@ class Player extends Component {
     );
   };
 
+  findNextValue = (arr, value) => {
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] > value) {
+        return arr[i];
+      }
+    }
+    return 0;
+  };
+
   playerPosition = (allVideoList) => {
     let playerPositions;
     let videoPositions;
     let position;
     let { videoPosition, playerPosition } = this.state;
+    const indices = allVideoList[0]
+      .map((item, index) => ({ personalized: item.personalized, index }))
+      .filter(item => item.personalized === 0)
+      .map(item => item.index);
     const rssRunning = _.get(allVideoList, `[${playerPosition}][${videoPosition}].media_type`, "") === RSS && this.endCalled;
     if (
       (playerPosition <= allVideoList.length - 1 &&
@@ -554,6 +605,9 @@ class Player extends Component {
         !(rssRunning) ? (videoPosition >= allVideoList[playerPositions].length - 1
           ? 0
           : videoPosition + 1) : videoPosition;
+      if (indices.length && !indices.includes(videoPositions)) {
+        videoPositions = this.findNextValue(indices, videoPositions);
+      }
       position = this.setRSSPosition(allVideoList, playerPosition, videoPositions)
     } else if (
       playerPosition < allVideoList.length - 1 &&
@@ -566,8 +620,10 @@ class Player extends Component {
     } else {
       playerPositions = 0;
       videoPositions = 0;
+      if (indices.length && !indices.includes(videoPositions)) {
+        videoPositions = this.findNextValue(indices, videoPositions);
+      }
       position = this.setRSSPosition(allVideoList, playerPositions, videoPositions);
-
     }
     return { videoPosition: videoPositions, playerPosition: playerPositions, position };
   };
@@ -601,25 +657,29 @@ class Player extends Component {
       isBrowser,
       baseStripPosition,
       stripImageList,
-      player_id
+      player_id,
+      validIndex
     } = this.state;
     const oldLayoutTypeId = window.localStorage.getItem("layout_type_id");
     const oldMediaId = window.localStorage.getItem("currentMediaId");
+    const oldPlayerInfoId = window.localStorage.getItem("currentPlayerInfoId");
     if (mediaList.length === 0)
       return this.setState(emptyList);
     const isCurrentVideo = (allVideoList.length - 1 >= playerPosition) && (allVideoList[playerPosition].length - 1 >= videoPosition);
     if (isCurrentVideo && !isBrowser) {
-      const { player_info_id, date_dependent, media_end, media_start, start_date, end_date } = allVideoList[playerPosition][videoPosition];
+      const { player_info_id, date_dependent, media_end, media_start, start_date, end_date, personalized } = allVideoList[playerPosition][videoPosition];
       let mediaDates = { start_date, end_date }
       if (date_dependent == 1) {
         mediaDates.start_date = media_start;
         mediaDates.end_date = media_end;
       }
-      this.sendPlayCount(player_info_id, mediaDates);
+      !personalized && this.sendPlayCount(player_info_id, mediaDates);
     }
     const position = this.playerPosition(allVideoList);
     const nextVideo = allVideoList[position.playerPosition][position.videoPosition];
     const isSameMedia = nextVideo.media_id == oldMediaId && nextVideo.media_type === "video";
+    const currentPlayerInfoId = nextVideo.player_info_id;
+    const isSamePlayerInfoId = Number(oldPlayerInfoId) == currentPlayerInfoId;
     const isBase = nextVideo.layout_id === BASE;
     const isLayoutTypeIdSame = nextVideo.layout_type_id == oldLayoutTypeId;
     const stripPosition = !isLayoutTypeIdSame ? 0 : baseStripPosition;
@@ -641,21 +701,28 @@ class Player extends Component {
             ...position,
             isSlideHide: false,
             slideRenderer: isCurrentVideo && allVideoList[playerPosition].length - 1 === videoPosition ? videoPosition : position.videoPosition,
-            baseStripPosition: stripPosition
+            baseStripPosition: stripPosition,
+            loop: false,
+            enablePersonalized: false
           },
           () => {
             axios
               .post(`${tvLogger()} `, {
                 player_id,
                 isBrowser,
-                tenant,
                 position: {
                   ...position,
                 },
                 baseStripPosition: stripPosition,
                 media_name: nextVideo.media_name,
+                validIndex,
                 message: 'onEnded called in PWS'
               });
+            if (!isBrowser) {
+              this.struggleChecker(nextVideo, 40000);
+              isSamePlayerInfoId && nextVideo.media_type === "video" && this.myRef.current && this.myRef.current.play();
+              window.socket.emit('endVideo', nextVideo);
+            }
             localStorage.setItem("currentPlayerInfoId", JSON.stringify(nextVideo.player_info_id));
             localStorage.setItem("currentMediaId", JSON.stringify(nextVideo.media_id));
             localStorage.setItem("stripPlayerInfoId", JSON.stringify(stripPlayerInfoId));
@@ -663,7 +730,6 @@ class Player extends Component {
             isBase && !isLayoutTypeIdSame && currentBaseStrip.length && this.setupTimer();
             isBrowser && isSameMedia && this.myRef.current.play();
             this.videoEnd();
-            !isBrowser && window.socket.emit('endVideo', nextVideo)
           }
         );
       }, 500);
@@ -681,7 +747,7 @@ class Player extends Component {
   };
 
   sendPlayCountTimer = (fromMount) => {
-    const { playCountDetail, player_id, version, isBrowser, errorIds } = this.state;
+    const { playCountDetail, player_id, version, isBrowser, errorIds, enablePersonalized, validIndex, loop } = this.state;
     const params = {
       player_id,
       playCountDetail,
@@ -694,7 +760,7 @@ class Player extends Component {
       .then((res) => {
         const { isSocketWorking, serverDate } = res.data;
         const timeObjects = { serverDate, deviceTime: moment().format("YYYY-MM-DD HH:mm:ss") };
-        axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, errorIds, message: `updatePlayCount API success PWS || total mediaList:${res.data.data.length},cversion:${CACHE_VERSION}`, params, isSocketWorking });
+        axios.post(`${tvLogger()} `, { player_id, isBrowser, errorIds, message: `updatePlayCount API success PWS || total mediaList:${res.data.data.length},cversion:${CACHE_VERSION}`,enablePersonalized,validIndex,loop, playCountDetail: playCountDetail.length, version, isSocketWorking });
         !isBrowser && !isSocketWorking && this.socketRestart();
         localStorage.setItem("playCountDetail", JSON.stringify([]));
         localStorage.setItem("serverDate", serverDate);
@@ -724,13 +790,14 @@ class Player extends Component {
       })
       .catch((error) => {
         const { serverDate } = this.state;
-        axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, errorIds, message: `err - updatePlayCount PWS`, error, serverDate, params });
+        axios.post(`${tvLogger()} `, { player_id, isBrowser, errorIds, message: `err - updatePlayCount PWS`, error, serverDate, playCountDetail: playCountDetail.length, version });
         if (serverDate) {
           const timeObjects = { serverDate: this.getServerDate(), deviceTime: moment().format("YYYY-MM-DD HH:mm:ss") };
           localStorage.setItem("serverDate", timeObjects.serverDate);
           if (!fromMount) {
             let mediaList = JSON.parse(window.localStorage.getItem("mediaList"));
             if (mediaList) {
+              mediaList = mediaList.length && mediaList.filter((media) => ((media.media_type !== HTTP)));
               mediaList = this.checkDownloadedMedia(mediaList, timeObjects.serverDate);
               if (!this.state.online) mediaList = mediaList.filter(
                 (media) => (media.media_type !== RSS)
@@ -759,7 +826,7 @@ class Player extends Component {
       currentAllVideoList[videoPosition].media_type !== "video" &&
       currentAllVideoList[videoPosition].type_id !== STREAM &&
       ((mediaList.length != 1 && currentAllVideoList[videoPosition].media_type === RSS)
-        || (currentAllVideoList[videoPosition].media_type === "image"))
+        || (currentAllVideoList[videoPosition].media_type === "image") || (currentAllVideoList[videoPosition].media_type === "HTTP"))
     ) {
       this.endTimer && clearTimeout(this.endTimer);
       this.endTimer = null;
@@ -780,12 +847,27 @@ class Player extends Component {
 
   componentWillUnmount() {
     const { isBrowser, player_id } = this.state;
-    axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: `Unmounted called PWS` })
+    axios.post(`${tvLogger()} `, { player_id, isBrowser, message: `Unmounted called PWS` });
+    // Disconnect the observer when the component unmounts
+    if (this.observer) {
+      this.observer.disconnect();
+    }
     clearTimeout(this.endTimer);
     clearTimeout(this.posterTimer);
     clearTimeout(this.timer);
+    !isBrowser && clearTimeout(this.struggleTimer);
     !isBrowser && clearTimeout(this.triggerTimer);
     isBrowser && clearTimeout(this.setOfflineTimer);
+  }
+
+  componentDidCatch(error, errorInfo) {
+    const { isBrowser, player_id } = this.state;
+    axios.post(`${tvLogger()} `, { player_id, isBrowser, message: `error in componentDidCatch main file`, error, errorInfo });
+    if (error.message === 'ResizeObserver loop limit exceeded') {
+      console.warn('ResizeObserver loop limit error in CDC main file', error, errorInfo);
+      return;
+    }
+    console.error('Error in CDC main file', error, errorInfo);
   }
 
   errorMediaDownload = async (media, error) => {
@@ -798,7 +880,6 @@ class Player extends Component {
     const logData = {
       player_id,
       isBrowser,
-      tenant,
       player_info_id,
       media_id,
       errorIds,
@@ -910,8 +991,7 @@ class Player extends Component {
 
   clearLocalVariable = () => {
     const { player_id, isBrowser } = this.state;
-    axios.post(`${tvLogger()} `, { player_id, isBrowser, tenant, message: `Cleared LocalStorage PWS` });
-    localStorage.clear();
+    axios.post(`${tvLogger()} `, { player_id, isBrowser, message: `Cleared LocalStorage PWS` })
     window.location.reload(true);
   }
 
@@ -1030,7 +1110,6 @@ class Player extends Component {
     axios.post(`${tvLogger()} `, {
       player_id,
       isBrowser,
-      tenant,
       from,
       message: `API url connection test PWS || apiUrl:${apiUrl},protocol:${protocol},HN:${hostname}`,
     })
@@ -1050,49 +1129,12 @@ class Player extends Component {
       axios.post(`${tvLogger()} `, {
         player_id,
         isBrowser,
-        tenant,
         message: `socket connections PWS || data:${data}`,
       })
     });
 
     window.socket.on('playerinitiateSocket', (data) => {
-      const { player_info_id } = data;
-      const { allVideoList, baseStripPosition, stripImageList } = this.state;
-      const oldLayoutTypeId = window.localStorage.getItem("layout_type_id");
-      let currentVideo = {};
-      let videoPosition = 0;
-      let playerPosition = 0;
-      let stripPosition = 0;
-      let currentBaseStrip = [];
-      let validStripPosition;
-      if (allVideoList.length) {
-        const videoPositionStatus = allVideoList[0].map((item, index) => item.player_info_id === player_info_id && `${index}`);
-        const newVideoPosition = videoPositionStatus.filter((item) => typeof item === 'string' && item)
-        videoPosition = newVideoPosition.length ? Number(newVideoPosition[0]) : 0;
-      }
-      (this.endTimer !== null) && clearTimeout(this.endTimer);
-      this.endCalled = false;
-      const isCurrentVideo = (allVideoList.length - 1 >= playerPosition) && (allVideoList[playerPosition].length - 1 >= videoPosition);
-      currentVideo = isCurrentVideo ? allVideoList[playerPosition][videoPosition] : {};
-      const isBase = isCurrentVideo && currentVideo.layout_id === BASE;
-      const isLayoutTypeIdSame = isCurrentVideo && currentVideo.layout_type_id == oldLayoutTypeId;
-      if (isBase) {
-        currentBaseStrip = (Object.keys(currentVideo).length && stripImageList.length)
-          ? stripImageList[0].filter((item) => item.layout_type_id === currentVideo.layout_type_id) : [];
-        validStripPosition = (currentBaseStrip.length - 1) >= baseStripPosition;
-        if (validStripPosition) {
-          stripPosition = baseStripPosition;
-        }
-      }
-      this.timer && !isLayoutTypeIdSame && clearTimeout(this.timer);
-      this.setState({ videoPosition, playerPosition, baseStripPosition: !isLayoutTypeIdSame ? 0 : baseStripPosition, isSlideHide: true, slideRenderer: videoPosition }, () => {
-        this.videoEnd();
-        isBase && !isLayoutTypeIdSame && currentBaseStrip.length && this.setupTimer();
-        currentBaseStrip.length && localStorage.setItem("stripPlayerInfoId", JSON.stringify(currentBaseStrip[stripPosition].player_info_id));
-        localStorage.setItem("layout_type_id", JSON.stringify(currentVideo.layout_type_id));
-        localStorage.setItem("currentPlayerInfoId", JSON.stringify(currentVideo.player_info_id));
-        localStorage.setItem("currentMediaId", JSON.stringify(currentVideo.media_id));
-      });
+      this.selectedMedia(data);
     });
 
     window.socket.on('publishMedia', (player_id) => {
@@ -1130,12 +1172,12 @@ class Player extends Component {
 
     window.socket.on('connect_error', () => {
       const { player_id } = this.state;
-      axios.post(`${tvLogger()}`, { player_id, isBrowser, tenant, message: `err - connect_error in socket PWS` })
+      axios.post(`${tvLogger()}`, { player_id, isBrowser, message: `err - connect_error in socket PWS` })
     });
 
     window.socket.on('disconnect', reason => {
       const { player_id } = this.state;
-      axios.post(`${tvLogger()}`, { player_id, isBrowser, tenant, message: `Socket has been Disconnect PWS` })
+      axios.post(`${tvLogger()}`, { player_id, isBrowser, message: `Socket has been Disconnect PWS` })
     });
   }
 
@@ -1165,6 +1207,95 @@ class Player extends Component {
     return newUtcDate.toISOString();
   }
 
+  struggleChecker = (currentVideo, waitingDuration) => {
+    if (currentVideo && Object.keys(currentVideo).length) {
+      clearTimeout(this.struggleTimer);
+      const { mediaList, player_id, isBrowser } = this.state;
+      const checkingTime = waitingDuration + (Number(currentVideo.media_duration) * 1000);
+      this.struggleTimer = setTimeout(() => {
+        axios.post(`${tvLogger()} `, {
+          player_id,
+          isBrowser,
+          message: 'Media Struggled',
+          player_info_id: currentVideo.player_info_id,
+          media_id: currentVideo.media_id,
+          media_name: currentVideo.media_name
+        });
+        const filteredData = mediaList.filter(i => i.layout_id == BASE);
+        if (filteredData.length !== 1) {
+          return this.onEnded();
+        }
+        window.location.reload(true);
+      }, checkingTime)
+    }
+  }
+
+  selectedMedia = (data) => {
+    const { player_info_id, playingTime, waitingDuration, loop, enablePersonalized } = data;
+    
+    const { allVideoList, baseStripPosition, stripImageList, isBrowser } = this.state;
+    const oldLayoutTypeId = window.localStorage.getItem("layout_type_id");
+    if (!this.state.enablePersonalized) {
+      const oldPlayerInfoId = window.localStorage.getItem("currentPlayerInfoId");
+      localStorage.setItem("lastPlayedMedia", JSON.stringify(oldPlayerInfoId));
+    }
+    let currentVideo = {};
+    let videoPosition = 0;
+    let playerPosition = 0;
+    let stripPosition = 0;
+    let currentBaseStrip = [];
+    let validStripPosition;
+    if (allVideoList.length) {
+      const lastPlayedMedia = JSON.parse(window.localStorage.getItem("lastPlayedMedia"));
+      const selectedId = !enablePersonalized ? Number(lastPlayedMedia) : player_info_id;
+      const videoPositionStatus = allVideoList[0].map((item, index) => item.player_info_id === Number(selectedId) && `${index}`);
+      const newVideoPosition = videoPositionStatus.filter((item) => typeof item === 'string' && item)
+      videoPosition = newVideoPosition.length ? Number(newVideoPosition[0]) : 0;
+      const indices = allVideoList[0]
+      .map((item, index) => ({ personalized: item.personalized, index }))
+      .filter(item => item.personalized === 0)
+      .map(item => item.index);
+      if (indices.length && !indices.includes(videoPosition) && !enablePersonalized) {
+        videoPosition = this.findNextValue(indices, videoPosition);
+      }
+    }
+    (this.endTimer !== null) && clearTimeout(this.endTimer);
+    this.endCalled = false;
+    const isCurrentVideo = (allVideoList.length - 1 >= playerPosition) && (allVideoList[playerPosition].length - 1 >= videoPosition);
+    currentVideo = isCurrentVideo ? allVideoList[playerPosition][videoPosition] : {};
+    const isBase = isCurrentVideo && currentVideo.layout_id === BASE;
+    const isLayoutTypeIdSame = isCurrentVideo && currentVideo.layout_type_id == oldLayoutTypeId;
+    if (isBase) {
+      currentBaseStrip = (Object.keys(currentVideo).length && stripImageList.length)
+        ? stripImageList[0].filter((item) => item.layout_type_id === currentVideo.layout_type_id) : [];
+      validStripPosition = (currentBaseStrip.length - 1) >= baseStripPosition;
+      if (validStripPosition) {
+        stripPosition = baseStripPosition;
+      }
+    }
+    this.timer && !isLayoutTypeIdSame && clearTimeout(this.timer);
+    this.setState({
+      videoPosition,
+      playerPosition,
+      baseStripPosition: !isLayoutTypeIdSame ? 0 : baseStripPosition,
+      isSlideHide: true,
+      slideRenderer: videoPosition,
+      loop: loop ? true : false,
+      enablePersonalized
+    }, () => {
+      !isBrowser && this.struggleChecker(currentVideo, waitingDuration);
+      if (currentVideo.media_type == "video" && this.myRef && this.myRef.current && enablePersonalized) {
+        this.myRef.current.currentTime = playingTime;
+      }
+      !enablePersonalized && this.videoEnd();
+      isBase && !isLayoutTypeIdSame && currentBaseStrip.length && this.setupTimer();
+      currentBaseStrip.length && localStorage.setItem("stripPlayerInfoId", JSON.stringify(currentBaseStrip[stripPosition].player_info_id));
+      localStorage.setItem("layout_type_id", JSON.stringify(currentVideo.layout_type_id));
+      localStorage.setItem("currentPlayerInfoId", JSON.stringify(currentVideo.player_info_id));
+      localStorage.setItem("currentMediaId", JSON.stringify(currentVideo.media_id));
+    });
+  }
+
   render() {
     const {
       width,
@@ -1173,7 +1304,6 @@ class Player extends Component {
       position,
       mediaList,
       loaded,
-      loop,
       allVideoList,
       stripImageList,
       leftImageList,
@@ -1186,11 +1316,18 @@ class Player extends Component {
       slideRenderer,
       baseStripPosition,
       isPlayerPlaying,
-      onceTriggered
+      onceTriggered,
+      loop,
+      validIndex,
+      enablePersonalized,
+      serverDate
     } = this.state;
-    if (loaded && mediaList.length === 0)
+    console.log("render called", mediaList, '<<>>>');
+    
+    if ((loaded && mediaList.length === 0) || (loaded && !enablePersonalized && validIndex.length === 0))
       return (
         <div style={playerStyles.warningContent}>
+          <h2>ServerDate: {serverDate && moment(serverDate).tz('Asia/Kolkata').format("YYYY-MM-DD HH:mm:ss")}</h2>
           Device content unavailable. Please contact your signage provider with Error Code: 01-({macAddress})
         </div>
       );
@@ -1274,6 +1411,7 @@ class Player extends Component {
 
     return (
       <>
+        <h2>ServerDate: {serverDate && moment(serverDate).tz('Asia/Kolkata').format("YYYY-MM-DD HH:mm:ss")}</h2>
         <div style={{ fontSize: 0, backgroundColor: containerColor, height: divHeight, width: commonVideoWidth, transform: commonTransform }}>
           {!isBrowser && (currentBaseStrip.length - 1 >= baseStripPosition) && mode && modePosition && mainBaseStrip}
           {(currentLeftImageList.length && currentVideo.layout_id === 5)
@@ -1372,13 +1510,17 @@ class Player extends Component {
           {currentAllVideoList.length &&
             (currentVideo.media_type == "HTTP") &&
             (
-              <div style={{ display: "flex", justifyContent: 'center' }}>
+              <div style={{ display: "flex", justifyContent: 'center', transform: mediaTransform, backgroundColor: "black" }}>
                 <Iframe
                   url={currentVideo.media_url}
-                  width={`${videoWidth}px`}
-                  height={`${videoHeight}px`}
-                  styles={{ left: videoLeft }}
+                  width={`${commonMediaWidth}px`}
+                  height={`${commonVideoHeight}px`}
+                  styles={{ border: 'none', frameborder: 0 }}
                   id={videoPosition}
+                  onError={(error) => this.errorMediaDownload(
+                    currentAllVideoList[videoPosition],
+                    error
+                  )}
                 />
               </div>
             )}
